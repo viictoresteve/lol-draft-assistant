@@ -1,0 +1,47 @@
+.champion-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  display: block;
+
+  &:hover {
+    border-color: gold;
+  }
+
+  &.selected {
+    border-color: #c89b3c;
+  }
+
+  &.in-pool {
+    border-color: #00bcd4;
+  }
+
+  img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .champion-name {
+    display: block;
+    text-align: center;
+    font-size: clamp(8px, 0.7vw, 11px);
+    padding: 2px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pool-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+  }
+}

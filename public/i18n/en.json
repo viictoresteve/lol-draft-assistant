@@ -1,0 +1,54 @@
+{
+  "suggestions": {
+    "panel-title": "Suggested Picks",
+    "analyzing": "Analyzing draft...",
+    "empty-state": "Add picks to get suggestions",
+    "in-pool": "In your pool"
+  },
+  "draft": {
+    "ally-team": "Your Team",
+    "enemy-team": "Enemy Team",
+    "ally-bans": "Your Bans",
+    "enemy-bans": "Enemy Bans",
+    "your-turn": "Picking for your team",
+    "enemy-turn": "Picking for enemy team",
+    "toggle-turn-ally": "🟢 Your Turn",
+    "toggle-turn-enemy": "🔴 Enemy Turn",
+    "reset": "Reset Draft",
+    "title": "LoL Draft Assistant",
+    "banning-ally": "🚫 Banning for your team — click a champion",
+    "banning-enemy": "🚫 Banning for enemy team — click a champion",
+    "my-role": "My Role",
+    "pick-for": "Pick for"
+  },
+  "champion-search": {
+    "placeholder": "Search champion...",
+    "no-results": "No champions found",
+    "title": "Add Champions"
+  },
+  "pick-slot": {
+    "remove": "Remove"
+  },
+  "ban-slot": {
+    "ban": "BAN"
+  },
+  "pool": {
+    "title": "My Champion Pool",
+    "my-pool": "My Pool",
+    "empty": "No champions in your pool yet",
+    "hint": "Click a champion on the left to add it to your pool",
+    "add": "Add to pool",
+    "remove": "Remove"
+  },
+  "nav": {
+    "draft": "Draft",
+    "pool": "My Pool"
+  },
+  "roles": {
+    "top": "Top",
+    "jungle": "Jungle",
+    "mid": "Mid",
+    "adc": "ADC",
+    "support": "Support"
+  }
+}

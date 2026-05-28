@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Champion } from '@shared/models/champion.interface';
 
 @Component({
   selector: 'app-champion-card',
@@ -7,5 +8,7 @@ import { Component } from '@angular/core';
   styleUrl: './champion-card.scss',
 })
 export class ChampionCard {
-
+  @Input({ required: true }) champion!: Champion;
+  @Input() isSelected = false;
+  @Input() isInPool = false;
 }

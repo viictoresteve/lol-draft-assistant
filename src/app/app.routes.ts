@@ -9,15 +9,13 @@ export const routes: Routes = [
   {
     path: 'draft',
     loadComponent: () =>
-      import('./features/draft/pages/draft-page/draft-page.component').then(
-        (m) => m.DraftPageComponent,
-      ),
+      import('./features/draft/pages/draft-page/draft-page').then((m) => m.DraftPage),
   },
   {
     path: 'pool',
     loadComponent: () =>
-      import('./features/champion-pool/pages/champion-pool-page/champion-pool-page.component').then(
-        (m) => m.ChampionPoolPageComponent,
+      import('./features/champion-pool/pages/champion-pool-page/champion-pool-page').then(
+        (m) => m.ChampionPoolPage,
       ),
   },
 ];

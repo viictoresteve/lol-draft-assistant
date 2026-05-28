@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store, Action } from '@ngrx/store';
-import { switchMap, map, catchError, withLatestFrom } from 'rxjs/operators';
+import { switchMap, map, catchError, withLatestFrom, debounceTime } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
 import * as DraftActions from './draft.actions';
 import { selectAllPicks, selectAllyBans, selectEnemyBans } from './draft.selectors';
@@ -22,6 +22,7 @@ export class DraftEffects {
           DraftActions.addAllyBan,
           DraftActions.addEnemyBan,
         ),
+        debounceTime(2000),
         withLatestFrom(
           this.store.select(selectAllPicks),
           this.store.select(selectAllyBans),

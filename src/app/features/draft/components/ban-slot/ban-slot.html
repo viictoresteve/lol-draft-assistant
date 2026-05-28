@@ -1,1 +1,12 @@
-<p>ban-slot works!</p>
+<div class="ban-slot" [class.ally]="isAlly" [class.enemy]="!isAlly">
+  @if (champion) {
+    <div class="banned-champion">
+      <img [src]="champion.image" [alt]="champion.name" class="banned-img" />
+      <button class="remove-btn" (click)="banRemoved.emit()">✕</button>
+    </div>
+  } @else {
+    <div class="empty-ban">
+      <span>{{ 'ban-slot.ban' | translate }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,53 @@
+.champion-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  overflow: hidden;
+
+  .search-input {
+    width: 100%;
+    padding: clamp(4px, 0.5vw, 8px) 12px;
+    background: #1a1a2e;
+    border: 1px solid #c89b3c;
+    border-radius: 4px;
+    color: white;
+    font-size: clamp(11px, 1vw, 14px);
+    box-sizing: border-box;
+    flex-shrink: 0;
+
+    &:focus {
+      outline: none;
+      border-color: gold;
+    }
+  }
+
+  .champions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(60px, 7vw, 85px), 1fr));
+    gap: clamp(4px, 0.5vw, 8px);
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .no-results {
+    color: #888;
+    text-align: center;
+    font-size: 12px;
+  }
+}
+
+.champion-wrapper {
+  position: relative;
+
+  &.used {
+    cursor: not-allowed;
+    filter: grayscale(100%);
+    opacity: 0.5;
+
+    app-champion-card {
+      pointer-events: none;
+    }
+  }
+}

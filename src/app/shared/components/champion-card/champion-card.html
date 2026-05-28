@@ -1,1 +1,7 @@
-<p>champion-card works!</p>
+<div class="champion-card" [class.selected]="isSelected" [class.in-pool]="isInPool">
+  <img [src]="champion.image" [alt]="champion.name" />
+  <span class="champion-name">{{ champion.name }}</span>
+  @if (isInPool) {
+    <span class="pool-badge">⭐</span>
+  }
+</div>

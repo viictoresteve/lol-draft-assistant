@@ -1,0 +1,94 @@
+.suggestions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 16px;
+  background: #0a0a1a;
+  border-radius: 8px;
+
+  .panel-title {
+    color: #c89b3c;
+    margin: 0;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .analyzing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+
+    .spinner {
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+  }
+
+  .suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+
+  .suggestion-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+
+    &.in-pool {
+      border-color: #00bcd4;
+      background: rgba(0, 188, 212, 0.05);
+    }
+
+    app-champion-card {
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .suggestion-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .champion-name {
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .pool-tag {
+        color: #00bcd4;
+        font-size: 11px;
+      }
+
+      .reason {
+        color: #888;
+        font-size: 12px;
+        margin: 0;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .empty-state {
+    color: #888;
+    text-align: center;
+    margin-top: 24px;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

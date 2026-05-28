@@ -1,1 +1,13 @@
-<p>pick-slot works!</p>
+<div class="pick-slot" [class.ally]="isAlly" [class.enemy]="!isAlly">
+  @if (pick.champion) {
+    <div class="champion-filled">
+      <img [src]="pick.champion.image" [alt]="pick.champion.name" />
+      <span class="champion-name">{{ pick.champion.name }}</span>
+      <button class="remove-btn" (click)="championRemoved.emit()">✕</button>
+    </div>
+  } @else {
+    <div class="champion-empty">
+      <span class="role-icon">{{ pick.role }}</span>
+    </div>
+  }
+</div>

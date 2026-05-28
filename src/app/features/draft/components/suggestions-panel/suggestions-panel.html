@@ -1,1 +1,27 @@
-<p>suggestions-panel works!</p>
+<div class="suggestions-panel">
+  <h3 class="panel-title">{{ 'suggestions.panel-title' | translate }}</h3>
+
+  @if (isAnalyzing$ | async) {
+    <div class="analyzing">
+      <span class="spinner">⟳</span>
+      <span>{{ 'suggestions.analyzing' | translate }}</span>
+    </div>
+  } @else {
+    <div class="suggestions-list">
+      @for (suggestion of suggestions$ | async; track suggestion.champion.id) {
+        <div class="suggestion-item" [class.in-pool]="suggestion.isInPool">
+          <app-champion-card [champion]="suggestion.champion" [isInPool]="suggestion.isInPool" />
+          <div class="suggestion-info">
+            <span class="champion-name">{{ suggestion.champion.name }}</span>
+            @if (suggestion.isInPool) {
+              <span class="pool-tag">⭐ {{ 'suggestions.in-pool' | translate }}</span>
+            }
+            <p class="reason">{{ suggestion.reason }}</p>
+          </div>
+        </div>
+      } @empty {
+        <p class="empty-state">{{ 'suggestions.empty-state' | translate }}</p>
+      }
+    </div>
+  }
+</div>

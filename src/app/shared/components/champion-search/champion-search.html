@@ -1,1 +1,21 @@
-<p>champion-search works!</p>
+<div class="champion-search">
+  <input
+    [formControl]="searchControl"
+    placeholder="{{ 'champion-search.placeholder' | translate }}"
+    class="search-input"
+  />
+  <div class="champions-grid">
+    @for (champion of filteredChampions$ | async; track champion.id) {
+      <div class="champion-wrapper" [class.used]="isUsed(champion.id)">
+        <app-champion-card
+          [champion]="champion"
+          [isInPool]="false"
+          (click)="!isUsed(champion.id) && onChampionClick(champion)"
+          (contextmenu)="onChampionRightClick(champion, $event)"
+        />
+      </div>
+    } @empty {
+      <p class="no-results">{{ 'champion-search.no-results' | translate }}</p>
+    }
+  </div>
+</div>

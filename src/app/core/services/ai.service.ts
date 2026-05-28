@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of, throwError } from 'rxjs';
 import { Champion } from '@shared/models/champion.interface';
 import { DraftPick, Suggestion } from '@features/draft/models/draft.interface';
 import { environment } from 'src/environments/environment';
@@ -18,7 +18,7 @@ export interface DraftAnalysisRequest {
 export class AiService {
   private http = inject(HttpClient);
   private readonly API_URL =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
   private readonly API_KEY = environment.geminiApiKey;
 
   analyzeDraft(request: DraftAnalysisRequest): Observable<Suggestion[]> {
@@ -26,13 +26,18 @@ export class AiService {
 
     return this.http
       .post<any>(`${this.API_URL}?key=${this.API_KEY}`, {
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
       })
-      .pipe(map((response) => this.parseResponse(response)));
+      .pipe(
+        map((response) => this.parseResponse(response)),
+        catchError((error) => {
+          if (error.status === 429) {
+            console.warn('Gemini rate limit hit — skipping analysis');
+            return of([]); // devuelve array vacío en lugar de romper
+          }
+          return throwError(() => error);
+        }),
+      );
   }
 
   private buildPrompt(request: DraftAnalysisRequest): string {
