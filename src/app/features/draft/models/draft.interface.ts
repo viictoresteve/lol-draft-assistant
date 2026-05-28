@@ -1,6 +1,7 @@
 import { Champion } from '../../../shared/models/champion.interface';
 
 export type DraftRole = 'top' | 'jungle' | 'mid' | 'adc' | 'support';
+export type DraftSide = 'blue' | 'red';
 
 export interface DraftPick {
   role: DraftRole;
@@ -14,10 +15,13 @@ export interface DraftState {
   enemyBans: Champion[];
   suggestions: Suggestion[];
   isAnalyzing: boolean;
+  userRole: DraftRole | null;
+  side: DraftSide;
 }
 
 export interface Suggestion {
   champion: Champion;
   reason: string;
   isInPool: boolean;
+  summonerSpells: string[];
 }

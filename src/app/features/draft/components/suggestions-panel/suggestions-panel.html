@@ -1,27 +1,53 @@
-<div class="suggestions-panel">
-  <h3 class="panel-title">{{ 'suggestions.panel-title' | translate }}</h3>
+<div class="panel">
+  <h3 class="title">{{ ls.T().aiSuggestions }}</h3>
 
-  @if (isAnalyzing$ | async) {
-    <div class="analyzing">
-      <span class="spinner">⟳</span>
-      <span>{{ 'suggestions.analyzing' | translate }}</span>
+  @if (!userRole()) {
+    <p class="empty select-role">{{ ls.T().selectRolePrompt }}</p>
+  } @else if (isAnalyzing()) {
+    <div class="loading">
+      <div class="spinner" role="status" [attr.aria-label]="ls.T().analyzingDraft"></div>
+      <p>{{ ls.T().analyzingDraft }}</p>
     </div>
-  } @else {
-    <div class="suggestions-list">
-      @for (suggestion of suggestions$ | async; track suggestion.champion.id) {
-        <div class="suggestion-item" [class.in-pool]="suggestion.isInPool">
-          <app-champion-card [champion]="suggestion.champion" [isInPool]="suggestion.isInPool" />
+  } @else if (suggestions().length > 0) {
+    <ul class="suggestions-list" [attr.aria-label]="ls.T().aiSuggestions">
+      @for (suggestion of suggestions(); track suggestion.champion.id) {
+        <li class="suggestion">
+          <img
+            [src]="suggestion.champion.image"
+            [alt]="suggestion.champion.name"
+            width="46"
+            height="46"
+            class="champ-img"
+          />
           <div class="suggestion-info">
-            <span class="champion-name">{{ suggestion.champion.name }}</span>
-            @if (suggestion.isInPool) {
-              <span class="pool-tag">⭐ {{ 'suggestions.in-pool' | translate }}</span>
-            }
+            <div class="champ-header">
+              <span class="champ-name" [class.in-pool]="suggestion.isInPool">
+                {{ suggestion.champion.name }}
+                @if (suggestion.isInPool) {
+                  <span class="pool-badge" aria-label="In your pool">★</span>
+                }
+              </span>
+              @if (suggestion.summonerSpells.length) {
+                <div class="spells">
+                  @for (spell of suggestion.summonerSpells; track spell) {
+                    <img
+                      [src]="getSpellImageUrl(spell)"
+                      [alt]="spell"
+                      [title]="spell"
+                      width="22"
+                      height="22"
+                      class="spell-icon"
+                    />
+                  }
+                </div>
+              }
+            </div>
             <p class="reason">{{ suggestion.reason }}</p>
           </div>
-        </div>
-      } @empty {
-        <p class="empty-state">{{ 'suggestions.empty-state' | translate }}</p>
+        </li>
       }
-    </div>
+    </ul>
+  } @else {
+    <p class="empty">{{ ls.T().noSuggestions }}</p>
   }
 </div>

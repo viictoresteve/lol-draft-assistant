@@ -1,35 +1,16 @@
 <div class="pool-page">
   <header class="pool-header">
-    <h1>{{ 'pool.title' | translate }}</h1>
-    <a routerLink="/draft" class="btn-back">← {{ 'nav.draft' | translate }}</a>
+    <h1 class="pool-title">{{ ls.T().poolTitle }}</h1>
+    <p class="pool-subtitle">{{ ls.T().poolSubtitle }}</p>
   </header>
-
   <div class="pool-content">
-    <!-- LEFT — SEARCH -->
-    <div class="search-panel">
-      <h2>{{ 'champion-search.title' | translate }}</h2>
-      <app-champion-search (championSelected)="onChampionSelected($event)" />
-    </div>
-
-    <!-- RIGHT — MY POOL -->
-    <div class="my-pool">
-      <h2>{{ 'pool.my-pool' | translate }}</h2>
-
-      <div class="pool-grid">
-        @for (champion of poolChampions$ | async; track champion.id) {
-          <div class="pool-champion">
-            <app-champion-card [champion]="champion" [isInPool]="true" />
-            <button class="remove-btn" (click)="onRemoveFromPool(champion.id)">
-              {{ 'pool.remove' | translate }}
-            </button>
-          </div>
-        } @empty {
-          <div class="pool-empty">
-            <p>{{ 'pool.empty' | translate }}</p>
-            <p class="pool-hint">{{ 'pool.hint' | translate }}</p>
-          </div>
-        }
-      </div>
-    </div>
+    <section class="add-section" [attr.aria-label]="ls.T().addChampionSection">
+      <h2 class="section-title">{{ ls.T().addChampionSection }}</h2>
+      <app-pool-selector />
+    </section>
+    <section class="display-section" [attr.aria-label]="ls.T().myPoolSection">
+      <h2 class="section-title">{{ ls.T().myPoolSection }}</h2>
+      <app-pool-display />
+    </section>
   </div>
 </div>

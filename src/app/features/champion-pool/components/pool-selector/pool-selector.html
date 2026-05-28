@@ -1,1 +1,30 @@
-<p>pool-selector works!</p>
+<div class="selector">
+  <input
+    type="search"
+    class="search-input"
+    [placeholder]="ls.T().searchToAdd"
+    [value]="searchTerm()"
+    (input)="onInput($event)"
+    [attr.aria-label]="ls.T().searchToAdd"
+  />
+  @if (filteredChampions().length > 0) {
+    <div class="results" role="listbox">
+      @for (champion of filteredChampions(); track champion.id) {
+        <button
+          class="champion-option"
+          [class.in-pool]="isInPool(champion.id)"
+          (click)="toggle(champion)"
+          [attr.aria-label]="(isInPool(champion.id) ? ls.T().remove : ls.T().add) + ' ' + champion.name"
+          role="option"
+          [attr.aria-selected]="isInPool(champion.id)"
+        >
+          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" />
+          <span class="name">{{ champion.name }}</span>
+          <span class="badge">{{ isInPool(champion.id) ? '✓' : '+' }}</span>
+        </button>
+      }
+    </div>
+  } @else if (searchTerm().length > 0) {
+    <p class="no-results">{{ ls.T().noChampionsFound }}</p>
+  }
+</div>

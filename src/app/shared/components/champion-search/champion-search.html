@@ -1,21 +1,37 @@
-<div class="champion-search">
-  <input
-    [formControl]="searchControl"
-    placeholder="{{ 'champion-search.placeholder' | translate }}"
-    class="search-input"
-  />
-  <div class="champions-grid">
-    @for (champion of filteredChampions$ | async; track champion.id) {
-      <div class="champion-wrapper" [class.used]="isUsed(champion.id)">
-        <app-champion-card
-          [champion]="champion"
-          [isInPool]="false"
-          (click)="!isUsed(champion.id) && onChampionClick(champion)"
-          (contextmenu)="onChampionRightClick(champion, $event)"
-        />
-      </div>
+<div class="backdrop" (click)="close()" aria-hidden="true"></div>
+<div
+  class="panel"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="ls.T().searchPlaceholder"
+  (keydown)="onPanelKeydown($event)"
+>
+  <div class="panel-header">
+    <input
+      type="search"
+      class="search-input"
+      [placeholder]="ls.T().searchPlaceholder"
+      [value]="searchTerm()"
+      (input)="onInput($event)"
+      [attr.aria-label]="ls.T().searchPlaceholder"
+      autofocus
+    />
+    <button class="close-btn" (click)="close()" aria-label="Close">✕</button>
+  </div>
+  <p class="results-count">{{ filteredChampions().length }} {{ ls.T().champions }}</p>
+  <div class="results" role="listbox" [attr.aria-label]="ls.T().champions">
+    @for (champion of filteredChampions(); track champion.id) {
+      <button
+        class="champion-option"
+        role="option"
+        [attr.aria-label]="champion.name"
+        (click)="select(champion)"
+      >
+        <img [src]="champion.image" [alt]="champion.name" width="48" height="48" />
+        <span>{{ champion.name }}</span>
+      </button>
     } @empty {
-      <p class="no-results">{{ 'champion-search.no-results' | translate }}</p>
+      <p class="empty">{{ ls.T().noChampionsFound }}</p>
     }
   </div>
 </div>

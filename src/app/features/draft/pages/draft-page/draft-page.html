@@ -1,118 +1,63 @@
-<div class="draft-page">
-  <header class="draft-header">
-    <h1>{{ 'draft.title' | translate }}</h1>
-    <div class="header-actions">
-      <button class="btn-toggle" (click)="toggleTurn()">
-        {{
-          isAllyTurn
-            ? ('draft.toggle-turn-ally' | translate)
-            : ('draft.toggle-turn-enemy' | translate)
-        }}
-      </button>
-      <button class="btn-reset" (click)="onResetDraft()">{{ 'draft.reset' | translate }}</button>
+<div class="draft-board">
+  <header class="board-header">
+    <div class="side-selector" role="group" [attr.aria-label]="ls.T().side">
+      <span class="role-label-text">{{ ls.T().side }}</span>
+      <button
+        class="side-btn side-blue"
+        [class.active]="side() === 'blue'"
+        (click)="setSide('blue')"
+        [attr.aria-pressed]="side() === 'blue'"
+      >{{ ls.T().blueSide }}</button>
+      <button
+        class="side-btn side-red"
+        [class.active]="side() === 'red'"
+        (click)="setSide('red')"
+        [attr.aria-pressed]="side() === 'red'"
+      >{{ ls.T().redSide }}</button>
     </div>
+
+    <div class="role-selector" role="group" [attr.aria-label]="ls.T().myRole">
+      <span class="role-label-text">{{ ls.T().myRole }}</span>
+      @for (role of roles; track role) {
+        <button
+          class="role-btn"
+          [class.active]="userRole() === role"
+          [class]="'role-btn role-' + role + (userRole() === role ? ' active' : '')"
+          (click)="setRole(role)"
+          [attr.aria-pressed]="userRole() === role"
+        >{{ role }}</button>
+      }
+    </div>
+    <button class="reset-btn" (click)="reset()">{{ ls.T().reset }}</button>
   </header>
 
-  <div class="bans-section">
-    <div class="bans-row ally-bans">
-      @for (ban of allyBans$ | async; track ban.id) {
-        <app-ban-slot [champion]="ban" [isAlly]="true" />
-      }
-      @for (empty of [].constructor(5 - ((allyBans$ | async)?.length ?? 0)); track $index) {
-        <app-ban-slot [champion]="null" [isAlly]="true" (click)="startBanning('ally')" />
-      }
-    </div>
-
-    <span class="bans-center-label">{{ 'ban-slot.ban' | translate }}</span>
-
-    <div class="bans-row enemy-bans">
-      @for (ban of enemyBans$ | async; track ban.id) {
-        <app-ban-slot [champion]="ban" [isAlly]="false" />
-      }
-      @for (empty of [].constructor(5 - ((enemyBans$ | async)?.length ?? 0)); track $index) {
-        <app-ban-slot [champion]="null" [isAlly]="false" (click)="startBanning('enemy')" />
-      }
-    </div>
-  </div>
-
-  <div class="draft-content">
-    <div class="team-side ally-side">
-      <h2>{{ 'draft.ally-team' | translate }}</h2>
-      <div class="picks-column">
-        @for (pick of allyPicks$ | async; track pick.role) {
-          <app-pick-slot
-            [pick]="pick"
-            [isAlly]="true"
-            (championRemoved)="onAllyPickRemoved(pick.role)"
-          />
+  <div class="board-content">
+    <section class="team ally-team" [attr.aria-label]="ls.T().ally">
+      <div class="team-header team-header-ally">
+        <span class="team-label">{{ ls.T().ally }}</span>
+      </div>
+      <app-ban-panel team="ally" [bans]="allyBans()" [excludeIds]="takenIds()" />
+      <div class="picks">
+        @for (pick of allyPicks(); track pick.role) {
+          <app-pick-slot [pick]="pick" team="ally" [excludeIds]="takenIds()" [myRole]="userRole()" />
         }
       </div>
-    </div>
+    </section>
 
-    <div class="center-panel">
-      <div class="my-role-selector">
-        <span class="my-role-label">{{ 'draft.my-role' | translate }}:</span>
-        @for (role of roles; track role) {
-          <button
-            class="role-btn"
-            [class.active]="myRole === role"
-            (click)="onMyRoleSelected(role)"
-          >
-            {{ 'roles.' + role | translate }}
-          </button>
-        }
-      </div>
-
-      <div class="pick-role-selector">
-        <span class="pick-role-label">{{ 'draft.pick-for' | translate }}:</span>
-        @for (role of roles; track role) {
-          <button
-            class="role-btn"
-            [class.active]="selectedRole === role"
-            (click)="onRoleSelected(role)"
-          >
-            {{ 'roles.' + role | translate }}
-          </button>
-        }
-      </div>
-
-      <div
-        class="turn-indicator"
-        [class.ally]="isAllyTurn"
-        [class.enemy]="!isAllyTurn"
-        [class.banning]="isBanning"
-      >
-        @if (isBanning) {
-          {{
-            banningFor === 'ally'
-              ? ('draft.banning-ally' | translate)
-              : ('draft.banning-enemy' | translate)
-          }}
-        } @else {
-          {{ isAllyTurn ? ('draft.your-turn' | translate) : ('draft.enemy-turn' | translate) }}
-        }
-      </div>
-
-      <app-champion-search
-        [usedChampionIds]="usedChampionIds$ | async"
-        (championSelected)="onChampionSelected($event)"
-        (addToPool)="onAddToPool($event)"
-      />
-
+    <aside class="center-panel">
       <app-suggestions-panel />
-    </div>
+    </aside>
 
-    <div class="team-side enemy-side">
-      <h2>{{ 'draft.enemy-team' | translate }}</h2>
-      <div class="picks-column">
-        @for (pick of enemyPicks$ | async; track pick.role) {
-          <app-pick-slot
-            [pick]="pick"
-            [isAlly]="false"
-            (championRemoved)="onEnemyPickRemoved(pick.role)"
-          />
+    <section class="team enemy-team" [attr.aria-label]="ls.T().enemy">
+      <div class="team-header team-header-enemy">
+        <span class="team-label">{{ ls.T().enemy }}</span>
+      </div>
+      <app-ban-panel team="enemy" [bans]="enemyBans()" [excludeIds]="takenIds()" />
+      <div class="picks">
+        @for (pick of enemyPicks(); track pick.role) {
+          <app-pick-slot [pick]="pick" team="enemy" [excludeIds]="takenIds()" />
         }
       </div>
-    </div>
+    </section>
   </div>
 </div>

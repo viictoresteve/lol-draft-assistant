@@ -1,34 +1,40 @@
-import { Component, ChangeDetectionStrategy, input, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, signal, inject, effect } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Champion } from '@shared/models/champion.interface';
 import * as DraftActions from '@store/draft/draft.actions';
 import { ChampionSearch } from '@shared/components/champion-search/champion-search';
 
 @Component({
-  selector: 'app-ban-slot',
+  selector: 'app-ban-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ChampionSearch],
-  templateUrl: './ban-slot.html',
-  styleUrl: './ban-slot.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './ban-panel.html',
+  styleUrl: './ban-panel.scss',
 })
-export class BanSlot {
+export class BanPanel {
   private store = inject(Store);
 
-  champion = input<Champion | null>(null);
   team = input.required<'ally' | 'enemy'>();
+  bans = input.required<Champion[]>();
   excludeIds = input<string[]>([]);
 
   isSearchOpen = signal(false);
 
-  openSearch() {
-    if (!this.champion()) {
-      this.isSearchOpen.set(true);
-    }
+  banSlots = Array.from({ length: 5 });
+
+  constructor() {
+    // Auto-close when all 5 bans are filled
+    effect(() => {
+      if (this.bans().length >= 5) {
+        this.isSearchOpen.set(false);
+      }
+    });
   }
 
-  closeSearch() {
-    this.isSearchOpen.set(false);
+  openSearch() {
+    if (this.bans().length < 5) {
+      this.isSearchOpen.set(true);
+    }
   }
 
   onChampionSelected(champion: Champion) {
@@ -37,6 +43,14 @@ export class BanSlot {
     } else {
       this.store.dispatch(DraftActions.addEnemyBan({ champion }));
     }
+    // keepOpen=true handles staying open; effect auto-closes at 5
+  }
+
+  closeSearch() {
     this.isSearchOpen.set(false);
+  }
+
+  searchExcludeIds() {
+    return [...this.excludeIds(), ...this.bans().map((c) => c.id)];
   }
 }

@@ -1,2 +1,20 @@
-<app-navbar />
+<nav class="app-nav">
+  <span class="app-brand">LoL Draft</span>
+  <a routerLink="/draft" routerLinkActive="active" class="nav-link">{{ ls.T().navDraft }}</a>
+  <a routerLink="/pool" routerLinkActive="active" class="nav-link">{{ ls.T().navPool }}</a>
+  <div class="lang-selector" role="group" aria-label="Language">
+    <button
+      class="lang-btn"
+      [class.active]="ls.lang() === 'en'"
+      (click)="setLang('en')"
+      aria-label="English"
+    >EN</button>
+    <button
+      class="lang-btn"
+      [class.active]="ls.lang() === 'es'"
+      (click)="setLang('es')"
+      aria-label="Español"
+    >ES</button>
+  </div>
+</nav>
 <router-outlet />

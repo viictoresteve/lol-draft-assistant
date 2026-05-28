@@ -1,7 +1,6 @@
-<div class="champion-card" [class.selected]="isSelected" [class.in-pool]="isInPool">
-  <img [src]="champion.image" [alt]="champion.name" />
-  <span class="champion-name">{{ champion.name }}</span>
-  @if (isInPool) {
-    <span class="pool-badge">⭐</span>
+<div class="card">
+  <img [src]="champion().image" [alt]="champion().name" width="48" height="48" class="avatar" />
+  @if (showName()) {
+    <span class="name">{{ champion().name }}</span>
   }
 </div>

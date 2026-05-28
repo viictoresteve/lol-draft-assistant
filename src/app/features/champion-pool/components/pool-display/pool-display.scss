@@ -1,0 +1,75 @@
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.pool-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #1e2328;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 10px 6px 8px;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: #785a28;
+
+    .remove-btn {
+      opacity: 1;
+    }
+  }
+}
+
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 10px;
+  color: #c8aa6e;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: #e84057;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 9px;
+  padding: 2px 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  line-height: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-title {
+  color: #555;
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.empty-hint {
+  color: #444;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 340px;
+  margin-inline: auto;
+}

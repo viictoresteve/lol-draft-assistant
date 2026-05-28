@@ -1,14 +1,14 @@
-import { Component, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { Champion } from '@shared/models/champion.interface';
 
 @Component({
   selector: 'app-champion-card',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
   templateUrl: './champion-card.html',
   styleUrl: './champion-card.scss',
 })
 export class ChampionCard {
-  @Input({ required: true }) champion!: Champion;
-  @Input() isSelected = false;
-  @Input() isInPool = false;
+  champion = input.required<Champion>();
+  showName = input(true);
 }

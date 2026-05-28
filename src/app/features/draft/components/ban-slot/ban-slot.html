@@ -1,12 +1,25 @@
-<div class="ban-slot" [class.ally]="isAlly" [class.enemy]="!isAlly">
-  @if (champion) {
-    <div class="banned-champion">
-      <img [src]="champion.image" [alt]="champion.name" class="banned-img" />
-      <button class="remove-btn" (click)="banRemoved.emit()">✕</button>
-    </div>
+<div
+  class="slot"
+  [class.filled]="!!champion()"
+  (click)="openSearch()"
+  [attr.aria-label]="champion() ? 'Banned: ' + champion()!.name : 'Add ban'"
+  role="button"
+  tabindex="0"
+  (keydown.enter)="openSearch()"
+  (keydown.space)="openSearch()"
+>
+  @if (champion(); as c) {
+    <img [src]="c.image" [alt]="c.name" class="champion-img" />
+    <div class="ban-overlay" aria-hidden="true"></div>
   } @else {
-    <div class="empty-ban">
-      <span>{{ 'ban-slot.ban' | translate }}</span>
-    </div>
+    <span class="add-icon" aria-hidden="true">+</span>
   }
 </div>
+
+@if (isSearchOpen()) {
+  <app-champion-search
+    [excludeIds]="excludeIds()"
+    (championSelected)="onChampionSelected($event)"
+    (closed)="closeSearch()"
+  />
+}
