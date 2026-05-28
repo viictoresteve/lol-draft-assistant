@@ -21,6 +21,8 @@ export const initialState: DraftState = {
   enemyBans: [],
   suggestions: [],
   isAnalyzing: false,
+  userRole: null,
+  side: 'blue',
 };
 
 export const draftReducer = createReducer(
@@ -75,6 +77,10 @@ export const draftReducer = createReducer(
     ...state,
     isAnalyzing: false,
   })),
+
+  on(DraftActions.setUserRole, (state, { role }) => ({ ...state, userRole: role })),
+
+  on(DraftActions.setSide, (state, { side }) => ({ ...state, side })),
 
   on(DraftActions.resetDraft, () => initialState),
 );

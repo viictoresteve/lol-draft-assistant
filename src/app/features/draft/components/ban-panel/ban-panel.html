@@ -1,0 +1,35 @@
+<div class="ban-panel">
+  <div class="ban-slots">
+    @for (slot of banSlots; track $index) {
+      @if (bans()[$index]; as champion) {
+        <div
+          class="ban-circle filled"
+          [class.team-ally]="team() === 'ally'"
+          [class.team-enemy]="team() === 'enemy'"
+          [attr.aria-label]="'Banned: ' + champion.name"
+        >
+          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" />
+          <div class="ban-x" aria-hidden="true">✕</div>
+        </div>
+      } @else {
+        <button
+          class="ban-circle empty"
+          [class.team-ally]="team() === 'ally'"
+          [class.team-enemy]="team() === 'enemy'"
+          [disabled]="$index > bans().length"
+          (click)="openSearch()"
+          aria-label="Add ban"
+        >+</button>
+      }
+    }
+  </div>
+</div>
+
+@if (isSearchOpen()) {
+  <app-champion-search
+    [excludeIds]="searchExcludeIds()"
+    [keepOpen]="true"
+    (championSelected)="onChampionSelected($event)"
+    (closed)="closeSearch()"
+  />
+}

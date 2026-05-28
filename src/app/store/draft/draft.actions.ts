@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 import { Champion } from '@shared/models/champion.interface';
-import { DraftRole, Suggestion } from '@features/draft/models/draft.interface';
+import { DraftRole, DraftSide, Suggestion } from '@features/draft/models/draft.interface';
 
 // Pick actions
 export const addAllyPick = createAction(
@@ -38,6 +38,12 @@ export const analyzeDraftFailure = createAction(
   '[Draft] Analyze Draft Failure',
   props<{ error: string }>(),
 );
+
+// User role
+export const setUserRole = createAction('[Draft] Set User Role', props<{ role: DraftRole | null }>());
+
+// Side selection
+export const setSide = createAction('[Draft] Set Side', props<{ side: DraftSide }>());
 
 // Reset
 export const resetDraft = createAction('[Draft] Reset Draft');

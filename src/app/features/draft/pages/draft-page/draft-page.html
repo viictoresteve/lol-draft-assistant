@@ -1,1 +1,63 @@
-<p>draft-page works!</p>
+<div class="draft-board">
+  <header class="board-header">
+    <div class="side-selector" role="group" [attr.aria-label]="ls.T().side">
+      <span class="role-label-text">{{ ls.T().side }}</span>
+      <button
+        class="side-btn side-blue"
+        [class.active]="side() === 'blue'"
+        (click)="setSide('blue')"
+        [attr.aria-pressed]="side() === 'blue'"
+      >{{ ls.T().blueSide }}</button>
+      <button
+        class="side-btn side-red"
+        [class.active]="side() === 'red'"
+        (click)="setSide('red')"
+        [attr.aria-pressed]="side() === 'red'"
+      >{{ ls.T().redSide }}</button>
+    </div>
+
+    <div class="role-selector" role="group" [attr.aria-label]="ls.T().myRole">
+      <span class="role-label-text">{{ ls.T().myRole }}</span>
+      @for (role of roles; track role) {
+        <button
+          class="role-btn"
+          [class.active]="userRole() === role"
+          [class]="'role-btn role-' + role + (userRole() === role ? ' active' : '')"
+          (click)="setRole(role)"
+          [attr.aria-pressed]="userRole() === role"
+        >{{ role }}</button>
+      }
+    </div>
+    <button class="reset-btn" (click)="reset()">{{ ls.T().reset }}</button>
+  </header>
+
+  <div class="board-content">
+    <section class="team ally-team" [attr.aria-label]="ls.T().ally">
+      <div class="team-header team-header-ally">
+        <span class="team-label">{{ ls.T().ally }}</span>
+      </div>
+      <app-ban-panel team="ally" [bans]="allyBans()" [excludeIds]="takenIds()" />
+      <div class="picks">
+        @for (pick of allyPicks(); track pick.role) {
+          <app-pick-slot [pick]="pick" team="ally" [excludeIds]="takenIds()" [myRole]="userRole()" />
+        }
+      </div>
+    </section>
+
+    <aside class="center-panel">
+      <app-suggestions-panel />
+    </aside>
+
+    <section class="team enemy-team" [attr.aria-label]="ls.T().enemy">
+      <div class="team-header team-header-enemy">
+        <span class="team-label">{{ ls.T().enemy }}</span>
+      </div>
+      <app-ban-panel team="enemy" [bans]="enemyBans()" [excludeIds]="takenIds()" />
+      <div class="picks">
+        @for (pick of enemyPicks(); track pick.role) {
+          <app-pick-slot [pick]="pick" team="enemy" [excludeIds]="takenIds()" />
+        }
+      </div>
+    </section>
+  </div>
+</div>

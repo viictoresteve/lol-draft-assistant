@@ -1,1 +1,44 @@
-<p>pick-slot works!</p>
+<div
+  class="slot"
+  [class.filled]="!!pick().champion"
+  [class.my-role]="isMyRole()"
+  [class.team-ally]="team() === 'ally'"
+  [class.team-enemy]="team() === 'enemy'"
+  (click)="openSearch()"
+  [attr.aria-label]="pick().champion ? pick().champion!.name : 'Pick ' + pick().role"
+  role="button"
+  tabindex="0"
+  (keydown.enter)="openSearch()"
+  (keydown.space)="openSearch()"
+>
+  @if (pick().champion; as champion) {
+    <div
+      class="champ-art"
+      [style.background-image]="'url(' + getLoadingArt(champion.id) + ')'"
+    ></div>
+    <div class="slot-overlay">
+      <div class="slot-footer">
+        <span class="role-pill" [class]="'role-' + pick().role">{{ pick().role }}</span>
+        <span class="champion-name">{{ champion.name }}</span>
+      </div>
+    </div>
+    <button
+      class="remove-btn"
+      (click)="removePick($event)"
+      [attr.aria-label]="'Remove ' + champion.name"
+    >✕</button>
+  } @else {
+    <div class="empty-content">
+      <span class="role-pill" [class]="'role-' + pick().role">{{ pick().role }}</span>
+      <span class="add-icon" aria-hidden="true">+</span>
+    </div>
+  }
+</div>
+
+@if (isSearchOpen()) {
+  <app-champion-search
+    [excludeIds]="excludeIds()"
+    (championSelected)="onChampionSelected($event)"
+    (closed)="closeSearch()"
+  />
+}

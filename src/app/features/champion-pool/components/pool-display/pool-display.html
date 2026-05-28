@@ -1,1 +1,20 @@
-<p>pool-display works!</p>
+@if (champions().length > 0) {
+  <div class="pool-grid" role="list" [attr.aria-label]="ls.T().myPoolSection">
+    @for (champion of champions(); track champion.id) {
+      <div class="pool-card" role="listitem">
+        <img [src]="champion.image" [alt]="champion.name" width="56" height="56" class="avatar" />
+        <span class="name">{{ champion.name }}</span>
+        <button
+          class="remove-btn"
+          (click)="remove(champion.id)"
+          [attr.aria-label]="ls.T().remove + ' ' + champion.name"
+        >✕</button>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="empty-state">
+    <p class="empty-title">{{ ls.T().poolEmpty }}</p>
+    <p class="empty-hint">{{ ls.T().poolEmptyHint }}</p>
+  </div>
+}

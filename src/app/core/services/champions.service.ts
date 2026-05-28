@@ -1,21 +1,22 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { Champion } from '@shared/models/champion.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChampionsService {
+  private http = inject(HttpClient);
   private readonly VERSION = '15.8.1';
   private readonly BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${this.VERSION}`;
 
-  constructor(private http: HttpClient) {}
+  private readonly champions$ = this.http
+    .get<any>(`${this.BASE_URL}/data/en_US/champion.json`)
+    .pipe(map((response) => this.mapToChampions(response.data)), shareReplay(1));
 
   getChampions(): Observable<Champion[]> {
-    return this.http
-      .get<any>(`${this.BASE_URL}/data/en_US/champion.json`)
-      .pipe(map((response) => this.mapToChampions(response.data)));
+    return this.champions$;
   }
 
   getChampionImageUrl(championId: string): string {

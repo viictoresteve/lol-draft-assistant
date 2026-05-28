@@ -15,6 +15,10 @@ export const selectSuggestions = createSelector(selectDraftState, (state) => sta
 
 export const selectIsAnalyzing = createSelector(selectDraftState, (state) => state.isAnalyzing);
 
+export const selectUserRole = createSelector(selectDraftState, (state) => state.userRole);
+
+export const selectSide = createSelector(selectDraftState, (state) => state.side);
+
 export const selectAllPicks = createSelector(
   selectAllyPicks,
   selectEnemyPicks,

@@ -1,1 +1,53 @@
-<p>suggestions-panel works!</p>
+<div class="panel">
+  <h3 class="title">{{ ls.T().aiSuggestions }}</h3>
+
+  @if (!userRole()) {
+    <p class="empty select-role">{{ ls.T().selectRolePrompt }}</p>
+  } @else if (isAnalyzing()) {
+    <div class="loading">
+      <div class="spinner" role="status" [attr.aria-label]="ls.T().analyzingDraft"></div>
+      <p>{{ ls.T().analyzingDraft }}</p>
+    </div>
+  } @else if (suggestions().length > 0) {
+    <ul class="suggestions-list" [attr.aria-label]="ls.T().aiSuggestions">
+      @for (suggestion of suggestions(); track suggestion.champion.id) {
+        <li class="suggestion">
+          <img
+            [src]="suggestion.champion.image"
+            [alt]="suggestion.champion.name"
+            width="46"
+            height="46"
+            class="champ-img"
+          />
+          <div class="suggestion-info">
+            <div class="champ-header">
+              <span class="champ-name" [class.in-pool]="suggestion.isInPool">
+                {{ suggestion.champion.name }}
+                @if (suggestion.isInPool) {
+                  <span class="pool-badge" aria-label="In your pool">★</span>
+                }
+              </span>
+              @if (suggestion.summonerSpells.length) {
+                <div class="spells">
+                  @for (spell of suggestion.summonerSpells; track spell) {
+                    <img
+                      [src]="getSpellImageUrl(spell)"
+                      [alt]="spell"
+                      [title]="spell"
+                      width="22"
+                      height="22"
+                      class="spell-icon"
+                    />
+                  }
+                </div>
+              }
+            </div>
+            <p class="reason">{{ suggestion.reason }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="empty">{{ ls.T().noSuggestions }}</p>
+  }
+</div>

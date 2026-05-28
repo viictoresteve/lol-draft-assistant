@@ -1,0 +1,47 @@
+.pool-page {
+  min-height: calc(100vh - 44px);
+  background: #0d1117;
+  color: #c8aa6e;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.pool-header {
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #785a28;
+}
+
+.pool-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: #c89b3c;
+}
+
+.pool-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.pool-content {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #666;
+  margin: 0 0 12px;
+}
+
+@media (max-width: 768px) {
+  .pool-content {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,1 +1,16 @@
-<p>champion-pool-page works!</p>
+<div class="pool-page">
+  <header class="pool-header">
+    <h1 class="pool-title">{{ ls.T().poolTitle }}</h1>
+    <p class="pool-subtitle">{{ ls.T().poolSubtitle }}</p>
+  </header>
+  <div class="pool-content">
+    <section class="add-section" [attr.aria-label]="ls.T().addChampionSection">
+      <h2 class="section-title">{{ ls.T().addChampionSection }}</h2>
+      <app-pool-selector />
+    </section>
+    <section class="display-section" [attr.aria-label]="ls.T().myPoolSection">
+      <h2 class="section-title">{{ ls.T().myPoolSection }}</h2>
+      <app-pool-display />
+    </section>
+  </div>
+</div>
