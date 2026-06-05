@@ -3,14 +3,25 @@
     <h1 class="pool-title">{{ ls.T().poolTitle }}</h1>
     <p class="pool-subtitle">{{ ls.T().poolSubtitle }}</p>
   </header>
+
+  <div class="role-tabs" role="tablist" [attr.aria-label]="ls.T().myRole">
+    @for (role of roles; track role) {
+      <button
+        [class]="'role-tab role-' + role + (activeRole() === role ? ' active' : '')"
+        (click)="setRole(role)"
+        role="tab"
+        [attr.aria-selected]="activeRole() === role"
+      >{{ role }}</button>
+    }
+  </div>
+
   <div class="pool-content">
     <section class="add-section" [attr.aria-label]="ls.T().addChampionSection">
       <h2 class="section-title">{{ ls.T().addChampionSection }}</h2>
-      <app-pool-selector />
+      <app-pool-selector [activeRole]="activeRole()" />
     </section>
-    <section class="display-section" [attr.aria-label]="ls.T().myPoolSection">
-      <h2 class="section-title">{{ ls.T().myPoolSection }}</h2>
-      <app-pool-display />
+    <section class="display-section">
+      <app-pool-display [activeRole]="activeRole()" />
     </section>
   </div>
 </div>

@@ -6,9 +6,12 @@
           class="ban-circle filled"
           [class.team-ally]="team() === 'ally'"
           [class.team-enemy]="team() === 'enemy'"
-          [attr.aria-label]="'Banned: ' + champion.name"
+          [attr.aria-label]="'Remove ban: ' + champion.name"
+          [title]="'Click to remove ' + champion.name"
+          (click)="removeBan(champion)"
+          style="cursor:pointer"
         >
-          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" />
+          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" loading="lazy" decoding="async" />
           <div class="ban-x" aria-hidden="true">✕</div>
         </div>
       } @else {

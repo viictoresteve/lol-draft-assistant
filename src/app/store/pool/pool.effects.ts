@@ -3,9 +3,12 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { map, tap, withLatestFrom } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import * as PoolActions from './pool.actions';
-import { selectPoolChampions } from './pool.selectors';
+import { selectByRole } from './pool.selectors';
+import { RolePool } from '@features/champion-pool/models/pool.interface';
 
-const POOL_STORAGE_KEY = 'lol-draft-champion-pool';
+const POOL_STORAGE_KEY = 'lol-draft-champion-pool-v2';
+
+const EMPTY_BY_ROLE: RolePool = { top: [], jungle: [], mid: [], adc: [], support: [] };
 
 @Injectable()
 export class PoolEffects {
@@ -16,9 +19,21 @@ export class PoolEffects {
     this.actions$.pipe(
       ofType(PoolActions.loadPool),
       map(() => {
-        const stored = localStorage.getItem(POOL_STORAGE_KEY);
-        const champions = stored ? JSON.parse(stored) : [];
-        return PoolActions.loadPoolSuccess({ champions });
+        try {
+          const stored = localStorage.getItem(POOL_STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored) as RolePool;
+            const byRole: RolePool = {
+              top: Array.isArray(parsed.top) ? parsed.top : [],
+              jungle: Array.isArray(parsed.jungle) ? parsed.jungle : [],
+              mid: Array.isArray(parsed.mid) ? parsed.mid : [],
+              adc: Array.isArray(parsed.adc) ? parsed.adc : [],
+              support: Array.isArray(parsed.support) ? parsed.support : [],
+            };
+            return PoolActions.loadPoolSuccess({ byRole });
+          }
+        } catch {}
+        return PoolActions.loadPoolSuccess({ byRole: { ...EMPTY_BY_ROLE } });
       }),
     ),
   );
@@ -27,9 +42,9 @@ export class PoolEffects {
     () =>
       this.actions$.pipe(
         ofType(PoolActions.addToPool, PoolActions.removeFromPool),
-        withLatestFrom(this.store.select(selectPoolChampions)),
-        tap(([_, champions]) => {
-          localStorage.setItem(POOL_STORAGE_KEY, JSON.stringify(champions));
+        withLatestFrom(this.store.select(selectByRole)),
+        tap(([_, byRole]) => {
+          localStorage.setItem(POOL_STORAGE_KEY, JSON.stringify(byRole));
         }),
       ),
     { dispatch: false },

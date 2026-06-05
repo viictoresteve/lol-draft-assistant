@@ -8,6 +8,26 @@ export interface DraftPick {
   champion: Champion | null;
 }
 
+export type ChampionTipType = 'mechanic' | 'synergy' | 'combo' | 'counterplay';
+
+export interface ChampionTip {
+  type: ChampionTipType;
+  tip: string;
+}
+
+export interface CompSummary {
+  allyCompName: string;
+  enemyCompName: string;
+  macroTips: string[];
+}
+
+export type GameplayPhase = 'early' | 'trade' | 'teamfight' | 'win' | 'danger';
+
+export interface GameplayTip {
+  phase: GameplayPhase;
+  tip: string;
+}
+
 export interface DraftState {
   allyPicks: DraftPick[];
   allyBans: Champion[];
@@ -17,11 +37,27 @@ export interface DraftState {
   isAnalyzing: boolean;
   userRole: DraftRole | null;
   side: DraftSide;
+  gameplayTips: GameplayTip[];
+  isLoadingTips: boolean;
+  compSummary: CompSummary | null;
+  isLoadingCompSummary: boolean;
+  championTips: ChampionTip[];
+  isLoadingChampionTips: boolean;
+  error: string | null;
+}
+
+export interface BotlaneSynergy {
+  id: string;
+  name: string;
+  synergy: string;
 }
 
 export interface Suggestion {
   champion: Champion;
-  reason: string;
   isInPool: boolean;
   summonerSpells: string[];
+  tierInfo: string;
+  pros: string[];
+  cons: string[];
+  botlanePairs: BotlaneSynergy[];
 }

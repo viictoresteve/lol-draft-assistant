@@ -1,0 +1,57 @@
+<div class="settings-page">
+  <div class="settings-card">
+    <h2 class="settings-title">Settings</h2>
+
+    <section class="settings-section">
+      <h3 class="section-title">Groq API Key</h3>
+      <p class="section-desc">
+        Enter your Groq API key to use your own quota.
+        Get one free at <a href="https://console.groq.com" target="_blank" rel="noopener" class="link">console.groq.com</a>.
+      </p>
+
+      <div class="field">
+        <label class="field-label" for="api-key-input">API Key</label>
+        <div class="input-row">
+          <input
+            id="api-key-input"
+            class="key-input"
+            [type]="showKey() ? 'text' : 'password'"
+            [value]="keyDraft()"
+            (input)="keyDraft.set($any($event.target).value)"
+            placeholder="gsk_..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button
+            type="button"
+            class="toggle-btn"
+            (click)="toggleShowKey()"
+            [attr.aria-label]="showKey() ? 'Hide key' : 'Show key'"
+            [title]="showKey() ? 'Hide' : 'Show'"
+          >{{ showKey() ? '🙈' : '👁' }}</button>
+        </div>
+        @if (settingsService.hasCustomKey()) {
+          <span class="custom-key-badge">Custom key active</span>
+        }
+      </div>
+
+      <button
+        class="save-btn"
+        [class.saved]="saved()"
+        (click)="save()"
+        type="button"
+      >
+        @if (saved()) { Saved! } @else { Save }
+      </button>
+    </section>
+
+    <section class="settings-section info-section">
+      <h3 class="section-title">Patch Info</h3>
+      <div class="patch-row">
+        <span class="patch-label">Current patch:</span>
+        <span class="patch-value">{{ patchService.version() }}</span>
+      </div>
+      <p class="section-desc">Patch version is auto-detected from DDragon on app load.</p>
+    </section>
+  </div>
+</div>

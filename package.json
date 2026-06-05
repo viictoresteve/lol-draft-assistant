@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "proxy:dev": "cd server && npm run dev",
+    "proxy:install": "cd server && npm install",
+    "proxy:build": "cd server && npm run build",
+    "dev": "concurrently -n \"angular,proxy\" -c \"cyan,yellow\" \"ng serve\" \"cd server && npm run dev\""
   },
   "prettier": {
     "printWidth": 100,
@@ -23,16 +27,20 @@
   "private": true,
   "packageManager": "npm@11.6.2",
   "dependencies": {
+    "@angular/animations": "^21.2.16",
     "@angular/common": "^21.0.0",
     "@angular/compiler": "^21.0.0",
     "@angular/core": "^21.0.0",
     "@angular/forms": "^21.0.0",
     "@angular/platform-browser": "^21.0.0",
     "@angular/router": "^21.0.0",
+    "@angular/service-worker": "^21.2.16",
     "@ngrx/effects": "^21.1.0",
     "@ngrx/store": "^21.1.0",
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
+    "@sentry/angular": "^10.56.0",
+    "html2canvas": "^1.4.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -40,6 +48,7 @@
     "@angular/build": "^21.0.1",
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
+    "concurrently": "^9.1.0",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"

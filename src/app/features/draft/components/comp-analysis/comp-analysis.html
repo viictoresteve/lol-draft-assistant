@@ -1,0 +1,83 @@
+<div class="comp-analysis">
+  <div class="comp-row">
+    <!-- Ally side -->
+    <div class="comp-side ally-side">
+      <div class="comp-header">
+        <span class="side-label ally-label">Ally</span>
+        @if (compSummary()?.allyCompName) {
+          <span class="comp-name-badge ally-name">{{ compSummary()!.allyCompName }}</span>
+        } @else {
+          <span class="archetype-badge" [class]="archetypeClass(allyComp().archetype)">
+            {{ allyComp().archetype }}
+          </span>
+        }
+        <span class="fills">{{ allyComp().filled }}/5</span>
+      </div>
+      <div class="ad-ap-bar" title="AD vs AP balance">
+        <div class="bar-ad" [style.width.%]="allyComp().adScore"></div>
+        <div class="bar-ap" [style.width.%]="allyComp().apScore"></div>
+      </div>
+      <div class="bar-labels">
+        <span class="bar-label-ad">AD {{ allyComp().adScore | number:'1.0-0' }}%</span>
+        <span class="bar-label-ap">AP {{ allyComp().apScore | number:'1.0-0' }}%</span>
+      </div>
+    </div>
+
+    <div class="comp-divider" aria-hidden="true">vs</div>
+
+    <!-- Enemy side -->
+    <div class="comp-side enemy-side">
+      <div class="comp-header">
+        <span class="side-label enemy-label">Enemy</span>
+        @if (compSummary()?.enemyCompName) {
+          <span class="comp-name-badge enemy-name">{{ compSummary()!.enemyCompName }}</span>
+        } @else {
+          <span class="archetype-badge" [class]="archetypeClass(enemyComp().archetype)">
+            {{ enemyComp().archetype }}
+          </span>
+        }
+        <span class="fills">{{ enemyComp().filled }}/5</span>
+      </div>
+      <div class="ad-ap-bar" title="AD vs AP balance">
+        <div class="bar-ad" [style.width.%]="enemyComp().adScore"></div>
+        <div class="bar-ap" [style.width.%]="enemyComp().apScore"></div>
+      </div>
+      <div class="bar-labels">
+        <span class="bar-label-ad">AD {{ enemyComp().adScore | number:'1.0-0' }}%</span>
+        <span class="bar-label-ap">AP {{ enemyComp().apScore | number:'1.0-0' }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Macro strategy (AI-generated) ── -->
+  @if (isLoadingCompSummary()) {
+    <div class="macro-loading">
+      <div class="macro-spinner"></div>
+      <span>Analyzing compositions…</span>
+    </div>
+  } @else if (compSummary()?.macroTips?.length) {
+    <div class="macro-tips">
+      <span class="macro-label">Strategy</span>
+      @for (tip of compSummary()!.macroTips; track tip) {
+        <div class="macro-tip">
+          <span class="macro-arrow">→</span>
+          <span>{{ tip }}</span>
+        </div>
+      }
+    </div>
+  } @else if (threatAnalysis(); as ta) {
+    <!-- Fallback: tag-based threat analysis -->
+    <div class="threat-analysis">
+      <div class="threat-row">
+        <span class="threat-icon">⚡</span>
+        <span class="threat-text">{{ ta.threat }}</span>
+      </div>
+      @for (need of ta.needs; track need) {
+        <div class="need-row">
+          <span class="need-icon">→</span>
+          <span class="need-text">{{ need }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -10,6 +10,7 @@ export const TRANSLATIONS = {
     blueSide: 'Blue',
     redSide: 'Red',
     reset: 'Reset',
+    resetAll: 'Clear draft',
     ally: 'Ally',
     enemy: 'Enemy',
     // Suggestions panel
@@ -26,8 +27,8 @@ export const TRANSLATIONS = {
     banned: 'Banned',
     // Pool page
     poolTitle: 'My Champion Pool',
-    poolSubtitle: "Champions you're comfortable playing. The AI marks them with ★ in suggestions.",
-    addChampionSection: 'Add Champion',
+    poolSubtitle: 'Select a role tab and add the champions you play there. The AI marks pool champions with ★.',
+    addChampionSection: 'Add champion',
     myPoolSection: 'My Pool',
     searchToAdd: 'Search champion to add...',
     poolEmpty: 'Your pool is empty',
@@ -35,6 +36,15 @@ export const TRANSLATIONS = {
       'Search for champions above to add them. The AI will prioritize pool champions in suggestions.',
     remove: 'Remove',
     add: 'Add',
+    // Settings / share
+    settings: 'Settings',
+    settingsTitle: 'Settings',
+    groqApiKeyLabel: 'Groq API Key',
+    groqApiKeyHint: 'Get a free key at console.groq.com',
+    saveSettings: 'Save',
+    savedSettings: 'Saved!',
+    share: 'Share',
+    copied: 'Copied!',
     // AI instruction
     aiLang: 'Respond in English.',
   },
@@ -49,6 +59,7 @@ export const TRANSLATIONS = {
     blueSide: 'Azul',
     redSide: 'Rojo',
     reset: 'Reiniciar',
+    resetAll: 'Limpiar draft',
     ally: 'Aliado',
     enemy: 'Rival',
     // Suggestions panel
@@ -65,8 +76,8 @@ export const TRANSLATIONS = {
     banned: 'Baneado',
     // Pool page
     poolTitle: 'Mi Pool de Campeones',
-    poolSubtitle: 'Campeones con los que te sientes cómodo. La IA los marca con ★ en las sugerencias.',
-    addChampionSection: 'Añadir Campeón',
+    poolSubtitle: 'Selecciona un rol y añade los campeones que juegas en él. La IA marca los de tu pool con ★.',
+    addChampionSection: 'Añadir campeón',
     myPoolSection: 'Mi Pool',
     searchToAdd: 'Buscar campeón para añadir...',
     poolEmpty: 'Tu pool está vacío',
@@ -74,6 +85,15 @@ export const TRANSLATIONS = {
       'Busca campeones arriba para añadirlos. La IA priorizará los campeones de tu pool en las sugerencias.',
     remove: 'Eliminar',
     add: 'Añadir',
+    // Settings / share
+    settings: 'Ajustes',
+    settingsTitle: 'Ajustes',
+    groqApiKeyLabel: 'Clave API de Groq',
+    groqApiKeyHint: 'Consigue una clave gratis en console.groq.com',
+    saveSettings: 'Guardar',
+    savedSettings: '¡Guardado!',
+    share: 'Compartir',
+    copied: '¡Copiado!',
     // AI instruction
     aiLang: 'Responde íntegramente en español.',
   },

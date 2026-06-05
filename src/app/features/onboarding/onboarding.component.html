@@ -1,0 +1,36 @@
+@if (show()) {
+  <div class="onboarding-overlay" (click)="dismiss()" aria-modal="true" role="dialog" aria-label="Welcome">
+    <div class="onboarding-card" (click)="$event.stopPropagation()">
+      <h2 class="onboarding-title">Welcome to LoL Draft Assistant</h2>
+      <p class="onboarding-subtitle">Get started in 3 steps</p>
+
+      <div class="onboarding-steps">
+        <div class="onboarding-step">
+          <span class="step-icon">🎯</span>
+          <div class="step-content">
+            <strong class="step-heading">1. Select your role</strong>
+            <p class="step-desc">Click TOP / JG / MID / ADC / SUP to tell the AI what you're playing.</p>
+          </div>
+        </div>
+
+        <div class="onboarding-step">
+          <span class="step-icon">⚔️</span>
+          <div class="step-content">
+            <strong class="step-heading">2. Fill the draft</strong>
+            <p class="step-desc">Click any pick slot to add ally and enemy champions. Add bans too.</p>
+          </div>
+        </div>
+
+        <div class="onboarding-step">
+          <span class="step-icon">🤖</span>
+          <div class="step-content">
+            <strong class="step-heading">3. AI does the rest</strong>
+            <p class="step-desc">Get champion suggestions, gameplay tips, and comp analysis powered by AI.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="onboarding-btn" (click)="dismiss()">Got it →</button>
+    </div>
+  </div>
+}

@@ -20,18 +20,142 @@
       <span class="role-label-text">{{ ls.T().myRole }}</span>
       @for (role of roles; track role) {
         <button
-          class="role-btn"
-          [class.active]="userRole() === role"
           [class]="'role-btn role-' + role + (userRole() === role ? ' active' : '')"
           (click)="setRole(role)"
           [attr.aria-pressed]="userRole() === role"
         >{{ role }}</button>
       }
     </div>
-    <button class="reset-btn" (click)="reset()">{{ ls.T().reset }}</button>
+    <button
+      class="reset-btn"
+      (click)="reset()"
+      [attr.aria-label]="ls.T().resetAll"
+      [title]="ls.T().resetAll"
+    >✕ {{ ls.T().resetAll }}</button>
+    <button
+      class="share-btn"
+      (click)="copyDraftLink()"
+      [title]="ls.T().share"
+    >{{ shareCopied() ? ls.T().copied : ls.T().share }}</button>
+
+    <button
+      class="export-btn"
+      (click)="exportPng()"
+      [disabled]="exporting()"
+      title="Export as PNG"
+    >{{ exporting() ? '…' : 'PNG' }}</button>
+
+    <!-- History -->
+    <div class="template-container">
+      <button
+        class="template-toggle-btn"
+        [class.open]="showHistoryMenu()"
+        (click)="showHistoryMenu.update(v => !v)"
+        [disabled]="history().length === 0"
+        title="Draft history"
+      >History ▾ @if (winRate().rate > 0) { <span class="wr-badge">{{ winRate().rate }}% WR</span> }</button>
+      @if (showHistoryMenu() && history().length > 0) {
+        <div class="template-backdrop" (click)="showHistoryMenu.set(false)"></div>
+        <div class="template-dropdown history-dropdown">
+          @for (entry of history(); track entry.id) {
+            <button class="history-item" (click)="restoreFromHistory(entry)">
+              <div class="history-icons">
+                @for (url of historyPickIcons(entry); track url) {
+                  <img [src]="url" width="24" height="24" loading="lazy" />
+                }
+              </div>
+              <div class="history-meta">
+                <span class="history-time">{{ timeAgo(entry.timestamp) }}</span>
+                <span class="history-side" [class]="'side-' + entry.side">{{ entry.side }}</span>
+                @if (entry.userRole) {
+                  <span class="history-role">{{ entry.userRole }}</span>
+                }
+                @if (!entry.result) {
+                  <button class="result-btn win" (click)="markResult(entry.id, 'win'); $event.stopPropagation()" title="Mark as win">W</button>
+                  <button class="result-btn loss" (click)="markResult(entry.id, 'loss'); $event.stopPropagation()" title="Mark as loss">L</button>
+                } @else {
+                  <span class="result-badge" [class]="'result-' + entry.result">{{ entry.result === 'win' ? 'W' : 'L' }}</span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Template selector -->
+    <div class="template-container">
+      <button
+        class="template-toggle-btn"
+        [class.open]="showTemplateMenu()"
+        (click)="showTemplateMenu.update(v => !v)"
+        title="Draft presets"
+      >Presets ▾</button>
+
+      @if (showTemplateMenu()) {
+        <div class="template-backdrop" (click)="showTemplateMenu.set(false)"></div>
+        <div class="template-dropdown">
+
+          <!-- Mode toggle -->
+          <div class="template-mode">
+            <button
+              class="mode-btn"
+              [class.active]="templateMode() === 'enemy'"
+              (click)="templateMode.set('enemy')"
+            >Fill Enemy</button>
+            <button
+              class="mode-btn"
+              [class.active]="templateMode() === 'ally'"
+              (click)="templateMode.set('ally')"
+            >Fill Ally</button>
+          </div>
+
+          <p class="template-hint">
+            @if (templateMode() === 'enemy') {
+              Click a preset to populate the enemy team — great for testing counters
+            } @else {
+              Fills ally team (skips your selected role)
+            }
+          </p>
+
+          <!-- Template list -->
+          <div class="template-list">
+            @for (tpl of templates; track tpl.id) {
+              <button class="template-item" (click)="applyTemplate(tpl)">
+                <div class="tpl-icons">
+                  @for (role of roles; track role) {
+                    <img
+                      [src]="champUrl(tpl.picks[role].id)"
+                      [alt]="tpl.picks[role].name"
+                      [title]="tpl.picks[role].name"
+                      width="26"
+                      height="26"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  }
+                </div>
+                <div class="tpl-info">
+                  <div class="tpl-header">
+                    <span class="tpl-tag" [style.color]="tpl.color" [style.border-color]="tpl.color + '55'">
+                      {{ tpl.tag }}
+                    </span>
+                    <span class="tpl-name">{{ tpl.name }}</span>
+                  </div>
+                  <p class="tpl-desc">{{ tpl.description }}</p>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
   </header>
 
-  <div class="board-content">
+  <app-comp-analysis />
+
+  <div class="board-content" #boardRef>
     <section class="team ally-team" [attr.aria-label]="ls.T().ally">
       <div class="team-header team-header-ally">
         <span class="team-label">{{ ls.T().ally }}</span>

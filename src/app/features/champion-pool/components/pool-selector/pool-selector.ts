@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Store } from '@ngrx/store';
 import { Champion } from '@shared/models/champion.interface';
 import { ChampionsService } from '@core/services/champions.service';
-import { selectPoolChampionIds } from '@store/pool/pool.selectors';
+import { selectByRole } from '@store/pool/pool.selectors';
 import * as PoolActions from '@store/pool/pool.actions';
 import { LanguageService } from '@core/services/language.service';
+import { DraftRole } from '@features/draft/models/draft.interface';
 
 @Component({
   selector: 'app-pool-selector',
@@ -19,10 +20,14 @@ export class PoolSelector {
   private championsService = inject(ChampionsService);
   ls = inject(LanguageService);
 
+  activeRole = input.required<DraftRole>();
+
   private allChampions = toSignal(this.championsService.getChampions(), {
     initialValue: [] as Champion[],
   });
-  poolIds = toSignal(this.store.select(selectPoolChampionIds), { initialValue: [] as string[] });
+  private byRole = toSignal(this.store.select(selectByRole), {
+    initialValue: { top: [], jungle: [], mid: [], adc: [], support: [] } as Record<DraftRole, Champion[]>,
+  });
   searchTerm = signal('');
 
   filteredChampions = computed(() => {
@@ -37,15 +42,16 @@ export class PoolSelector {
     this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
-  toggle(champion: Champion) {
-    if (this.poolIds().includes(champion.id)) {
-      this.store.dispatch(PoolActions.removeFromPool({ championId: champion.id }));
-    } else {
-      this.store.dispatch(PoolActions.addToPool({ champion }));
-    }
+  isInPool(championId: string): boolean {
+    return this.byRole()[this.activeRole()].some((c) => c.id === championId);
   }
 
-  isInPool(id: string) {
-    return this.poolIds().includes(id);
+  toggle(champion: Champion) {
+    const role = this.activeRole();
+    if (this.isInPool(champion.id)) {
+      this.store.dispatch(PoolActions.removeFromPool({ championId: champion.id, role }));
+    } else {
+      this.store.dispatch(PoolActions.addToPool({ champion, role }));
+    }
   }
 }

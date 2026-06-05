@@ -6,6 +6,7 @@
     [value]="searchTerm()"
     (input)="onInput($event)"
     [attr.aria-label]="ls.T().searchToAdd"
+    autocomplete="off"
   />
   @if (filteredChampions().length > 0) {
     <div class="results" role="listbox">
@@ -18,7 +19,7 @@
           role="option"
           [attr.aria-selected]="isInPool(champion.id)"
         >
-          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" />
+          <img [src]="champion.image" [alt]="champion.name" width="40" height="40" loading="lazy" decoding="async" />
           <span class="name">{{ champion.name }}</span>
           <span class="badge">{{ isInPool(champion.id) ? '✓' : '+' }}</span>
         </button>

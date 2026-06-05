@@ -50,6 +50,14 @@ export class BanPanel {
     this.isSearchOpen.set(false);
   }
 
+  removeBan(champion: Champion) {
+    if (this.team() === 'ally') {
+      this.store.dispatch(DraftActions.removeAllyBan({ championId: champion.id }));
+    } else {
+      this.store.dispatch(DraftActions.removeEnemyBan({ championId: champion.id }));
+    }
+  }
+
   searchExcludeIds() {
     return [...this.excludeIds(), ...this.bans().map((c) => c.id)];
   }

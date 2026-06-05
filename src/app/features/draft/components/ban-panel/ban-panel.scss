@@ -1,57 +1,57 @@
+/* ─── Ban panel — fila de cuadrados fijos ─── */
 .ban-panel {
-  display: flex;
-  align-items: center;
   width: 100%;
+  padding: 5px 6px;
+  background: #040810;
+  box-sizing: border-box;
 }
 
 .ban-slots {
   display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
+  gap: 4px;
   justify-content: center;
   width: 100%;
 }
 
+/* ── Cada ban: cuadrado 34×34 ── */
 .ban-circle {
   position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
 
   &.filled {
-    background: #0d1117;
+    background: #080d14;
 
-    &.team-ally  { border: 2px solid #0a4a6a; }
-    &.team-enemy { border: 2px solid #6a0a1a; }
+    &.team-ally  { outline: 1px solid #0a3a35; }
+    &.team-enemy { outline: 1px solid #4a0a12; }
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: grayscale(50%) brightness(0.7);
+      object-position: center 10%;
+      filter: grayscale(55%) brightness(0.65);
     }
   }
 
   &.empty {
-    border: 2px dashed #333;
-    background: transparent;
-    color: #333;
-    font-size: 16px;
+    border: 1px dashed #1e2535;
+    background: #050a10;
+    color: #252d3a;
+    font-size: 14px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color 0.12s, color 0.12s;
 
-    &.team-ally:not([disabled]):hover  { border-color: #0ac8b9; color: #0ac8b9; }
-    &.team-enemy:not([disabled]):hover { border-color: #e84057; color: #e84057; }
+    &.team-ally:not([disabled]):hover  { border-color: #0a6a60; color: #0ac8b9; }
+    &.team-enemy:not([disabled]):hover { border-color: #6a1a22; color: #e84057; }
 
-    &[disabled] {
-      opacity: 0.25;
-      cursor: not-allowed;
-    }
+    &[disabled] { opacity: 0.2; cursor: not-allowed; }
   }
 }
 
@@ -61,8 +61,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(180, 30, 50, 0.35);
-  color: rgba(255, 100, 115, 0.9);
-  font-size: 13px;
-  font-weight: bold;
+  background: rgba(160, 20, 35, 0.38);
+  color: rgba(255, 80, 100, 0.8);
+  font-size: 10px;
+  font-weight: 700;
+  transition: background 0.12s;
+}
+
+.ban-circle.filled:hover .ban-x {
+  background: rgba(220, 30, 50, 0.65);
 }

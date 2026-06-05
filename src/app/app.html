@@ -1,7 +1,10 @@
-<nav class="app-nav">
+<nav class="app-nav" aria-label="Main navigation">
   <span class="app-brand">LoL Draft</span>
+  <span class="patch-badge" [title]="'League of Legends patch ' + patchVersion">{{ patchVersion }}</span>
+  <div class="nav-divider" aria-hidden="true"></div>
   <a routerLink="/draft" routerLinkActive="active" class="nav-link">{{ ls.T().navDraft }}</a>
   <a routerLink="/pool" routerLinkActive="active" class="nav-link">{{ ls.T().navPool }}</a>
+  <a routerLink="/settings" routerLinkActive="active" class="nav-link nav-settings" [title]="ls.T().settings" [attr.aria-label]="ls.T().settings">⚙</a>
   <div class="lang-selector" role="group" aria-label="Language">
     <button
       class="lang-btn"
@@ -17,4 +20,13 @@
     >ES</button>
   </div>
 </nav>
-<router-outlet />
+@if (!hasApiKey) {
+  <div class="api-key-banner" role="alert">
+    <span>⚠ No Groq API key configured — AI suggestions won't work.</span>
+    <a routerLink="/settings" class="banner-link">Add key in Settings →</a>
+  </div>
+}
+<app-onboarding />
+<main>
+  <router-outlet />
+</main>

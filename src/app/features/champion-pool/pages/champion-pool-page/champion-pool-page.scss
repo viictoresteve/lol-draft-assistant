@@ -8,7 +8,7 @@
 }
 
 .pool-header {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid #785a28;
 }
@@ -25,9 +25,39 @@
   color: #555;
 }
 
+/* ── Role tabs ── */
+.role-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.role-tab {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 6px 16px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #1a1f25;
+
+  &.role-top     { color: #ffaaaa; border-color: #7b3f3f; &.active { background: #7b3f3f; } }
+  &.role-jungle  { color: #aaffaa; border-color: #2d5a2d; &.active { background: #2d5a2d; } }
+  &.role-mid     { color: #aaaaff; border-color: #3d3d7b; &.active { background: #3d3d7b; } }
+  &.role-adc     { color: #ffd580; border-color: #5a4a2d; &.active { background: #5a4a2d; } }
+  &.role-support { color: #80d4d4; border-color: #3d5a5a; &.active { background: #3d5a5a; } }
+
+  &:hover { filter: brightness(1.3); }
+}
+
+/* ── Content layout ── */
 .pool-content {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 32px;
   align-items: start;
 }

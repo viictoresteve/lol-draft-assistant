@@ -1,53 +1,274 @@
 <div class="panel">
-  <h3 class="title">{{ ls.T().aiSuggestions }}</h3>
 
-  @if (!userRole()) {
-    <p class="empty select-role">{{ ls.T().selectRolePrompt }}</p>
-  } @else if (isAnalyzing()) {
-    <div class="loading">
-      <div class="spinner" role="status" [attr.aria-label]="ls.T().analyzingDraft"></div>
-      <p>{{ ls.T().analyzingDraft }}</p>
+  <!-- ── Header ── -->
+  <div class="panel-head">
+    @if (isDraftComplete() && userRole() && !showPoolPanel() && panelTab() === 'suggestions') {
+      <h3 class="title guide-title">
+        {{ playerChamp() ?? '?' }}
+        <span class="vs-sep">vs</span>
+        {{ enemyChamp() ?? '?' }}
+      </h3>
+    } @else if (!showPoolPanel() && panelTab() === 'champion-tips') {
+      <h3 class="title">{{ playerChamp() ?? '?' }} <span class="vs-sep">tips</span></h3>
+    } @else if (!showPoolPanel()) {
+      <h3 class="title">{{ ls.T().aiSuggestions }}</h3>
+      @if (suggestions().length > 0 && panelTab() === 'suggestions') {
+        <div class="view-toggle" role="group" aria-label="Filter view">
+          <button class="vbtn pro-btn" [class.active]="activeView() === 'pros'"
+            (click)="setView('pros')" [attr.aria-pressed]="activeView() === 'pros'">✓ Pros</button>
+          <button class="vbtn con-btn" [class.active]="activeView() === 'cons'"
+            (click)="setView('cons')" [attr.aria-pressed]="activeView() === 'cons'">✗ Contras</button>
+        </div>
+      }
+    } @else {
+      <h3 class="title">★ {{ userRole()?.toUpperCase() }} Pool</h3>
+    }
+
+    <div class="panel-actions">
+      <!-- Champion tips tab (shown once user has picked) -->
+      @if (hasPick() && !showPoolPanel()) {
+        <button
+          class="tab-btn"
+          [class.active]="panelTab() === 'champion-tips'"
+          (click)="panelTab.set(panelTab() === 'champion-tips' ? 'suggestions' : 'champion-tips')"
+          [title]="panelTab() === 'champion-tips' ? 'Back to suggestions' : 'Champion mechanics & synergies'"
+        >
+          @if (isLoadingChampionTips()) { <span class="tab-spinner"></span> }
+          {{ panelTab() === 'champion-tips' ? '← Suggestions' : '⚡ Tips' }}
+        </button>
+      }
+      @if (userRole()) {
+        <button
+          class="pool-toggle-btn"
+          [class.active]="showPoolPanel()"
+          (click)="togglePoolPanel()"
+          [title]="showPoolPanel() ? 'Back' : 'Manage pool'"
+        >{{ showPoolPanel() ? '← Back' : '★ Pool' }}</button>
+      }
     </div>
-  } @else if (suggestions().length > 0) {
-    <ul class="suggestions-list" [attr.aria-label]="ls.T().aiSuggestions">
-      @for (suggestion of suggestions(); track suggestion.champion.id) {
-        <li class="suggestion">
-          <img
-            [src]="suggestion.champion.image"
-            [alt]="suggestion.champion.name"
-            width="46"
-            height="46"
-            class="champ-img"
-          />
-          <div class="suggestion-info">
-            <div class="champ-header">
-              <span class="champ-name" [class.in-pool]="suggestion.isInPool">
-                {{ suggestion.champion.name }}
-                @if (suggestion.isInPool) {
-                  <span class="pool-badge" aria-label="In your pool">★</span>
+  </div>
+
+  <!-- ══ POOL MINI-PANEL ══ -->
+  @if (showPoolPanel() && userRole()) {
+    <div class="pool-panel">
+      <!-- Search to add -->
+      <div class="pool-search-row">
+        <input
+          class="pool-search-input"
+          type="search"
+          placeholder="Add champion to pool…"
+          [value]="poolSearchTerm()"
+          (input)="poolSearchTerm.set($any($event.target).value)"
+          autocomplete="off"
+        />
+      </div>
+      @if (poolSearchResults().length > 0) {
+        <div class="pool-search-results">
+          @for (c of poolSearchResults(); track c.id) {
+            <button class="pool-add-btn" (click)="addToPool(c)" [title]="'Add ' + c.name">
+              <img [src]="c.image" [alt]="c.name" width="28" height="28" loading="lazy" />
+              <span>{{ c.name }}</span>
+              <span class="pool-add-icon">+</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Current role pool -->
+      @if (currentRolePool().length > 0) {
+        <div class="pool-current">
+          <p class="pool-current-label">In pool</p>
+          <div class="pool-chips">
+            @for (c of currentRolePool(); track c.id) {
+              <div class="pool-chip">
+                <img [src]="champIcon(c.id)" [alt]="c.name" width="24" height="24" loading="lazy" />
+                <span>{{ c.name }}</span>
+                <button class="pool-remove-btn" (click)="removeFromPool(c.id)" [title]="'Remove ' + c.name">✕</button>
+              </div>
+            }
+          </div>
+        </div>
+      } @else if (poolSearchTerm().length === 0) {
+        <p class="pool-empty-hint">No champions in your {{ userRole() }} pool yet</p>
+      }
+    </div>
+
+  <!-- ══ CHAMPION TIPS TAB ══ -->
+  } @else if (panelTab() === 'champion-tips') {
+
+    @if (isLoadingChampionTips()) {
+      <div class="loading" aria-live="polite">
+        <div class="spinner"></div>
+        <p>Loading {{ playerChamp() }} tips…</p>
+      </div>
+
+    } @else if (championTips().length > 0) {
+      <div class="champ-tips-list" aria-label="Champion tips" aria-live="polite">
+        @for (tip of championTips(); track tip.tip) {
+          <div class="champ-tip" [style.--tip-color]="TIP_TYPE_LABELS[tip.type].color">
+            <span class="champ-tip-type">{{ TIP_TYPE_LABELS[tip.type].label }}</span>
+            <span class="champ-tip-text">{{ tip.tip }}</span>
+          </div>
+        }
+      </div>
+
+    } @else {
+      <p class="empty">Pick your champion to get mechanics and synergy tips</p>
+    }
+
+  } @else if (!userRole()) { <!-- no role selected -->
+    <p class="empty select-role">{{ ls.T().selectRolePrompt }}</p>
+
+  <!-- ══ DRAFT COMPLETE: Gameplay Guide ══ -->
+  } @else if (isDraftComplete()) {
+
+    @if (isLoadingTips()) {
+      <div class="loading" aria-live="polite">
+        <div class="spinner" role="status"></div>
+        <p>Analyzing matchup...</p>
+      </div>
+
+    } @else if (gameplayTips().length > 0) {
+      <div class="gameplay-guide" aria-label="Gameplay guide" aria-live="polite">
+        @for (phase of phaseOrder; track phase) {
+          @let tips = tipsForPhase().get(phase);
+          @if (tips && tips.length > 0) {
+            <div class="phase-block">
+              <span [class]="'phase-badge phase-' + phase">{{ phaseLabel(phase) }}</span>
+              <ul class="phase-tips">
+                @for (tip of tips; track tip) {
+                  <li class="phase-tip">{{ tip }}</li>
                 }
-              </span>
-              @if (suggestion.summonerSpells.length) {
-                <div class="spells">
-                  @for (spell of suggestion.summonerSpells; track spell) {
-                    <img
-                      [src]="getSpellImageUrl(spell)"
-                      [alt]="spell"
-                      [title]="spell"
-                      width="22"
-                      height="22"
-                      class="spell-icon"
-                    />
+              </ul>
+            </div>
+          }
+        }
+      </div>
+
+    } @else {
+      <div class="loading" aria-live="polite">
+        <div class="spinner" role="status"></div>
+        <p>Analyzing matchup...</p>
+      </div>
+    }
+
+  <!-- ══ DRAFT IN PROGRESS: Suggestions ══ -->
+  } @else if (error() && !isAnalyzing()) {
+    <div class="error-state">
+      @if (error() === 'NO_API_KEY') {
+        <p class="error-msg">No Groq API key configured</p>
+        <p class="error-hint">Add your key in <a href="/settings" style="color:#c89b3c">Settings</a></p>
+      } @else if (error() === 'RATE_LIMITED') {
+        <p class="error-msg">Rate limit hit — wait a moment</p>
+        <p class="error-hint">Groq free tier has request limits</p>
+        <button class="retry-btn" (click)="retry()">Try again</button>
+      } @else {
+        <p class="error-msg">AI analysis failed</p>
+        <button class="retry-btn" (click)="retry()">Try again</button>
+      }
+    </div>
+
+  } @else if (isAnalyzing()) {
+    <div class="skeleton-list" aria-busy="true" aria-label="Loading suggestions">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="skeleton-card">
+          <div class="sk-header">
+            <div class="sk-img"></div>
+            <div class="sk-lines">
+              <div class="sk-line sk-line-long"></div>
+              <div class="sk-line sk-line-short"></div>
+            </div>
+          </div>
+          <div class="sk-body">
+            <div class="sk-line sk-line-full"></div>
+            <div class="sk-line sk-line-long"></div>
+            <div class="sk-line sk-line-medium"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+  } @else if (suggestions().length > 0) {
+    <ol class="cards" aria-live="polite" aria-atomic="false">
+      @for (s of visibleSuggestions(); track s.champion.id; let i = $index) {
+        <li class="card" [class.clickable]="!hasPick() && !!userRole()"
+          (click)="addPick(s.champion)"
+          [attr.title]="!hasPick() && !!userRole() ? 'Click to add to your pick' : ''">
+
+          <div class="card-header">
+            <span class="rank">{{ page() * pageSize + i + 1 }}</span>
+            <div class="champ-portrait">
+              <img [src]="s.champion.image" [alt]="s.champion.name" width="46" height="46"
+                [attr.loading]="i === 0 ? 'eager' : 'lazy'" decoding="async" />
+            </div>
+            <div class="card-meta">
+              <div class="name-row">
+                <span class="champ-name" [class.in-pool]="s.isInPool">{{ s.champion.name }}</span>
+                @if (s.isInPool) { <span class="pool-star" aria-label="In your pool">★</span> }
+                @if (s.tierInfo) { <span class="tier-badge">{{ s.tierInfo }}</span> }
+              </div>
+              @if (s.summonerSpells.length) {
+                <div class="spells" aria-label="Summoner spells">
+                  @for (spell of s.summonerSpells; track spell) {
+                    <img [src]="getSpellImageUrl(spell)" [alt]="spell" [title]="spell"
+                      width="20" height="20" class="spell-icon" loading="lazy" decoding="async" />
                   }
                 </div>
               }
             </div>
-            <p class="reason">{{ suggestion.reason }}</p>
+            @if (!hasPick() && !!userRole()) {
+              <span class="add-hint" aria-hidden="true">+ Pick</span>
+            }
           </div>
+
+          <div class="card-body">
+            @if (activeView() !== 'cons') {
+              @for (pro of s.pros; track pro) {
+                <div class="tag pro"><span class="tag-icon" aria-hidden="true">✓</span><span>{{ pro }}</span></div>
+              }
+            }
+            @if (activeView() !== 'pros') {
+              @for (con of s.cons; track con) {
+                <div class="tag con"><span class="tag-icon" aria-hidden="true">✗</span><span>{{ con }}</span></div>
+              }
+              @if (activeView() === 'cons' && s.cons.length === 0) {
+                <div class="tag no-cons">Sin contras relevantes en este draft</div>
+              }
+            }
+          </div>
+
+          @if ((userRole() === 'adc' || userRole() === 'support') && s.botlanePairs.length > 0) {
+            <div class="botlane-pairs">
+              <span class="pairs-label">{{ userRole() === 'adc' ? 'Supports' : 'ADCs' }}</span>
+              @for (pair of s.botlanePairs; track pair.id) {
+                <div class="pair-chip">
+                  <img [src]="champIcon(pair.id)" [alt]="pair.name" width="22" height="22"
+                    loading="lazy" decoding="async" />
+                  <span>{{ pair.name }}</span>
+                  @if (pair.synergy) {
+                    <div class="synergy-tooltip" role="tooltip">
+                      <strong class="synergy-champ">{{ pair.name }}</strong>
+                      <span>{{ pair.synergy }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
         </li>
       }
-    </ul>
+    </ol>
+
+    @if (pageCount() > 1) {
+      <div class="pagination">
+        <button class="page-btn" (click)="prevPage()" [disabled]="page() === 0" aria-label="Previous">‹</button>
+        <span class="page-label">{{ page() + 1 }} / {{ pageCount() }}</span>
+        <button class="page-btn" (click)="nextPage()" [disabled]="page() >= pageCount() - 1" aria-label="Next">›</button>
+      </div>
+    }
+
   } @else {
     <p class="empty">{{ ls.T().noSuggestions }}</p>
   }
+
 </div>

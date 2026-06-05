@@ -1,34 +1,37 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, defer, map, shareReplay } from 'rxjs';
 import { Champion } from '@shared/models/champion.interface';
+import { PatchService } from '@core/services/patch.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChampionsService {
   private http = inject(HttpClient);
-  private readonly VERSION = '15.8.1';
-  private readonly BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${this.VERSION}`;
+  private patchService = inject(PatchService);
 
-  private readonly champions$ = this.http
-    .get<any>(`${this.BASE_URL}/data/en_US/champion.json`)
-    .pipe(map((response) => this.mapToChampions(response.data)), shareReplay(1));
+  private readonly champions$: Observable<Champion[]> = defer(() => {
+    const version = this.patchService.version();
+    return this.http
+      .get<any>(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
+      .pipe(map((response) => this.mapToChampions(response.data, version)));
+  }).pipe(shareReplay(1));
 
   getChampions(): Observable<Champion[]> {
     return this.champions$;
   }
 
   getChampionImageUrl(championId: string): string {
-    return `${this.BASE_URL}/img/champion/${championId}.png`;
+    return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
   }
 
-  private mapToChampions(data: any): Champion[] {
+  private mapToChampions(data: any, version: string): Champion[] {
     return Object.values(data).map((champ: any) => ({
       id: champ.id,
       name: champ.name,
       title: champ.title,
-      image: this.getChampionImageUrl(champ.id),
+      image: `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champ.id}.png`,
       tags: champ.tags,
     }));
   }
