@@ -165,6 +165,41 @@ describe('GET /api/tier/:role — upstream errors', () => {
   });
 });
 
+// ── /api/counters/:champion ───────────────────────────────────────────────────
+
+const MALPHITE_MCP_RESPONSE = {
+  result: {
+    content: [{
+      type: 'text',
+      text: `class Data: summary,damage_type,strong_counters,weak_counters\nclass StrongCounter: champion_id,champion_name,play,win,win_rate\n\nLolGetChampionAnalysis("MALPHITE","TOP",Data(Summary(),"AP",[StrongCounter(67,"Vayne",1878,1150,0.61),StrongCounter(133,"Quinn",565,331,0.59),StrongCounter(69,"Cassiopeia",274,116,0.58)],[]))`,
+    }],
+  },
+};
+
+describe('GET /api/counters/:champion', () => {
+  it('returns 200 with damage type and counters', async () => {
+    vi.stubGlobal('fetch', mockMcp(200, MALPHITE_MCP_RESPONSE));
+    const res = await request(app).get('/api/counters/Malphite?position=top');
+    expect(res.status).toBe(200);
+    expect(res.body.damageType).toBe('AP');
+    expect(Array.isArray(res.body.counters)).toBe(true);
+    expect(res.body.counters[0].name).toBe('Vayne');
+    expect(res.body.counters[0].winRate).toBe(61);
+  });
+
+  it('deduplicates counters and returns max 8', async () => {
+    vi.stubGlobal('fetch', mockMcp(200, MALPHITE_MCP_RESPONSE));
+    const res = await request(app).get('/api/counters/Malphite?position=top');
+    expect(res.body.counters.length).toBeLessThanOrEqual(8);
+  });
+
+  it('returns 502 when fetch throws', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('timeout')));
+    const res = await request(app).get('/api/counters/Malphite?position=top');
+    expect(res.status).toBe(502);
+  });
+});
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 
 describe('CORS headers', () => {

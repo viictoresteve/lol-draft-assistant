@@ -90,6 +90,7 @@ export class DraftEffects {
           DraftActions.addAllyPick,
           DraftActions.addEnemyPick,
           DraftActions.setUserRole,
+          DraftActions.retryAnalysis,
         ),
         debounceTime(3500),  // gameplay tips: fires last (only when all 10 picks)
         withLatestFrom(
@@ -124,7 +125,7 @@ export class DraftEffects {
   analyzeCompSummary$ = createEffect(
     (): Observable<Action> =>
       this.actions$.pipe(
-        ofType(DraftActions.addAllyPick, DraftActions.addEnemyPick),
+        ofType(DraftActions.addAllyPick, DraftActions.addEnemyPick, DraftActions.retryAnalysis),
         debounceTime(2200),  // comp summary: fires second, after suggestions
         withLatestFrom(this.store.select(selectAllPicks)),
         filter(([_, allPicks]) => {
@@ -199,6 +200,7 @@ export class DraftEffects {
           DraftActions.setUserRole,
           DraftActions.loadDraftSuccess,
           DraftActions.restoreDraft,
+          DraftActions.retryAnalysis,
         ),
         debounceTime(700),
         withLatestFrom(

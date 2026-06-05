@@ -124,6 +124,69 @@ app.get('/api/tier/:role', async (req, res) => {
   }
 });
 
+// ── Matchup data ─────────────────────────────────────────────────────────────
+// GET /api/counters/:champion?position=top
+// Returns what beats a specific champion + their damage type (real OP.GG data)
+app.get('/api/counters/:champion', async (req, res) => {
+  const champion = req.params.champion.toUpperCase().replace(/\s+/g, '_');
+  const position = (req.query['position'] as string ?? 'top').toUpperCase();
+
+  const cacheKey = `counters:${champion}:${position}`;
+  const cached = fromCache(cacheKey);
+  if (cached) { res.json(cached); return; }
+
+  try {
+    const upstream = await fetch(OPGG_MCP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1, method: 'tools/call',
+        params: {
+          name: 'lol_get_champion_analysis',
+          arguments: { champion, position, game_mode: 'ranked', lang: 'en_US' },
+        },
+      }),
+    });
+
+    if (!upstream.ok) {
+      res.status(503).json({ error: `OP.GG returned ${upstream.status}` });
+      return;
+    }
+
+    const json = await upstream.json() as any;
+    const text: string = json?.result?.content?.[0]?.text ?? '';
+    if (!text) { res.status(503).json({ error: 'Empty response' }); return; }
+
+    // Parse damage_type: "AP" | "AD" | "MIXED"
+    const dmgMatch = text.match(/"(AP|AD|MIXED|TRUE)"/);
+    const damageType = dmgMatch?.[1] ?? 'MIXED';
+
+    // Parse StrongCounter entries: StrongCounter(id,"Name",games,wins,win_rate)
+    const counterRe = /StrongCounter\(\d+,"([^"]+)",(\d+),(\d+),([\d.]+)\)/g;
+    const counters: { name: string; winRate: number; games: number }[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = counterRe.exec(text)) !== null) {
+      const [, name, games, , wr] = m;
+      counters.push({ name, winRate: Math.round(parseFloat(wr) * 100), games: parseInt(games) });
+    }
+
+    // Sort by win rate descending, deduplicate, take top 8
+    const seen = new Set<string>();
+    const topCounters = counters
+      .sort((a, b) => b.winRate - a.winRate)
+      .filter(c => { if (seen.has(c.name)) return false; seen.add(c.name); return true; })
+      .slice(0, 8);
+
+    const data = { champion: req.params.champion, position, damageType, counters: topCounters };
+    toCache(cacheKey, data);
+    res.json(data);
+
+  } catch (err) {
+    console.error('[counters] Error:', (err as Error).message);
+    res.status(502).json({ error: 'Could not fetch matchup data' });
+  }
+});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (_, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 

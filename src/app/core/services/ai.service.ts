@@ -7,6 +7,7 @@ import { DraftPick, DraftRole, DraftSide, Suggestion, GameplayTip, GameplayPhase
 import { Champion } from '@shared/models/champion.interface';
 import { LanguageService } from '@core/services/language.service';
 import { TierListService, ChampionTierEntry } from '@core/services/tier-list.service';
+import { MatchupService, ChampionMatchupData } from '@core/services/matchup.service';
 import { PatchService } from '@core/services/patch.service';
 
 const SPELL_ID_MAP: Record<string, string> = {
@@ -47,7 +48,8 @@ export class AiService {
   private http = inject(HttpClient);
   private ls = inject(LanguageService);
   private tierListService = inject(TierListService);
-  private patchService = inject(PatchService);
+  private matchupService  = inject(MatchupService);
+  private patchService    = inject(PatchService);
   private readonly API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
   private get ddragonBase() {
@@ -64,37 +66,50 @@ export class AiService {
       ? this.tierListService.getChampionTiers(request.userRole)
       : of(null);
 
+    // Fetch real counter data for the enemy champion in the user's role
+    const enemyChamp = request.userRole
+      ? (request.enemyPicks.find(p => p.role === request.userRole)?.champion ?? null)
+      : null;
+    const matchupFetch = enemyChamp && request.userRole
+      ? this.matchupService.getCounters(enemyChamp.name, request.userRole)
+      : of(null as ChampionMatchupData | null);
+
     return tierFetch.pipe(
-      switchMap((tierData) => {
-        const prompt = this.buildPrompt(request, tierData);
-        return this.http
-          .post<any>(
-            this.API_URL,
-            {
-              model: 'llama-3.3-70b-versatile',
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.45,
-              max_tokens: 1800,
-            },
-            { headers: { 'Content-Type': 'application/json' } },
-          )
-          .pipe(
-            retry({
-              count: 3,
-              delay: (error, retryCount) => {
-                if (error.status === 429) return timer(retryCount * 3000);
-                throw error;
-              },
-            }),
-            map((response) => this.parseResponse(response)),
-          );
-      }),
+      switchMap((tierData) =>
+        matchupFetch.pipe(
+          switchMap((matchupData) => {
+            const prompt = this.buildPrompt(request, tierData, matchupData);
+            return this.http
+              .post<any>(
+                this.API_URL,
+                {
+                  model: 'llama-3.3-70b-versatile',
+                  messages: [{ role: 'user', content: prompt }],
+                  temperature: 0.25,
+                  max_tokens: 2200,
+                },
+                { headers: { 'Content-Type': 'application/json' } },
+              )
+              .pipe(
+                retry({
+                  count: 3,
+                  delay: (error, retryCount) => {
+                    if (error.status === 429) return timer(retryCount * 3000);
+                    throw error;
+                  },
+                }),
+                map((response) => this.parseResponse(response)),
+              );
+          }),
+        ),
+      ),
     );
   }
 
   private buildPrompt(
     request: DraftAnalysisRequest,
     tierData: ChampionTierEntry[] | null,
+    matchupData: ChampionMatchupData | null = null,
   ): string {
     const roles: DraftRole[] = ['top', 'jungle', 'mid', 'adc', 'support'];
 
@@ -158,6 +173,9 @@ NEVER change the ranking order because of the pool.`
     const langInstruction = this.ls.T().aiLang;
     const botlaneSection = this.buildBotlaneSection(request, allyByRole, enemyByRole);
 
+    // Real matchup data from OP.GG — highest-value context for counter logic
+    const matchupSection = this.buildMatchupSection(matchupData, request.userRole ?? null, enemyByRole);
+
     return `You are an elite League of Legends coach. Rank suggestions by TRUE WIN PROBABILITY in this exact game state.
 ${langInstruction}
 
@@ -172,17 +190,23 @@ Enemy bans: ${enemyBansStr}${request.allyCompName ? `\nAlly comp: ${request.ally
 === PLAYER ===
 ${roleSection}
 
+${matchupSection}
+
 === RANKING PRIORITY — follow this exact order, never deviate ===
 
 PRIORITY 1 — COUNTER (does it hard-answer their win condition?)
 Ask: How does the enemy team win? Which champion is their key threat?
 Then: Does this pick directly shut it down?
-Reasoning patterns to apply:
-  • Braum W (Unbreakable) blocks ALL projectiles → hard counters hook supports (Nautilus, Blitzcrank, Thresh, Pyke)
-  • Malphite (armor stacking) → nullifies full-AD comps (Draven, Zed, Tryndamere, Fiora)
-  • Renekton early dominance → punishes slow-starting tops (Nasus, Gangplank, Gnar)
+${matchupSection ? '↑ Use the REAL MATCHUP DATA above as your primary counter source.' : `
+FALLBACK DAMAGE TYPE RULES (use when no real data above):
+Armor tanks (Malphite, Rammus) → AD melee (Jax/Darius/Nasus/Riven) are invalidated — prefer AP/ranged/poke
+Assassins (Zed/Talon) vs peel comps → poor matchup — prefer poke or CC-heavy picks`}
+
+More counter patterns:
+  • Braum W blocks ALL projectiles → counters Nautilus/Blitzcrank/Thresh/Pyke hooks
+  • Renekton → punishes slow starts (Nasus, Gangplank, Gnar)
   • Quicksilver Sash users → counter point-and-click CC (Warwick, Malzahar, Mordekaiser)
-  • Ranged poke (Teemo, Jayce, Quinn) → neutralizes melee bully tops in lane
+  • Ranged poke (Teemo, Jayce, Quinn) → neutralizes melee bullies who can't reach
 
 PRIORITY 2 — SYNERGY (does it complete or enable an ally combo?)
 Ask: Are there ally picks with combo potential that need a specific partner?
@@ -210,7 +234,12 @@ Step 1 — Enemy win condition: how do they win? Who is the key threat?
 Step 2 — Ally gaps: what is the comp missing (frontline/damage/CC/peel)?
 Step 3 — Synergy check: are any ally picks creating combo potential (check Priority 2 patterns)?
 Step 4 — Rank exactly 6 champion suggestions by pure draft quality (best first).
-Step 5 — Pool check: scan your ranked list against the pool reference below and mark matches.
+Step 5 — MANDATORY VALIDATION: for each suggestion, answer these 3 questions:
+  a) Does this champion's damage type get hard-countered by any enemy champion? (e.g., AD melee vs armor tank = fail)
+  b) Does this champion have a realistic way to impact the game given the enemy comp?
+  c) Would a high-elo player be embarrassed to pick this here?
+  If you answer YES to (a) or (c), or NO to (b) → REPLACE that suggestion immediately.
+Step 6 — Pool check: scan your validated list against the pool reference below and mark matches.
 
 ${poolSection}
 
@@ -263,6 +292,33 @@ STRICT RULES:
   ADC:     Flash+Heal (standard), Flash+Cleanse (vs heavy CC), Ghost+Heal (hypercarries like Jinx, Kog'Maw)
   SUPPORT: Flash+Exhaust (default for most supports), Flash+Ignite (aggressive engage supports: Leona, Nautilus, Brand, Lux), Flash+Barrier (enchanters: Lulu, Soraka, Janna)
   NEVER give Smite to non-jungle. NEVER give Teleport to ADC/Support.`;
+  }
+
+  private buildMatchupSection(
+    matchupData: ChampionMatchupData | null,
+    userRole: DraftRole | null,
+    enemyByRole: Map<DraftRole, string | undefined>,
+  ): string {
+    if (!matchupData || !userRole) return '';
+
+    const enemyName = enemyByRole.get(userRole) ?? matchupData.champion;
+    const topCounters = matchupData.counters
+      .slice(0, 6)
+      .map(c => `${c.name} (${c.winRate}% WR)`)
+      .join(' | ');
+
+    return `=== REAL MATCHUP DATA — OP.GG Ranked Stats (HIGHEST PRIORITY) ===
+Enemy ${enemyName.toUpperCase()} (${userRole.toUpperCase()}): primary damage type = ${matchupData.damageType}
+Champions that BEAT ${enemyName} in lane (real win rates, current patch):
+  ${topCounters}
+
+HARD RULE: Suggestions must come from this list or have a clear tactical justification.
+Champions NOT on this list are statistically poor picks vs ${enemyName}.
+Damage type ${matchupData.damageType} means: ${
+  matchupData.damageType === 'AP' ? 'AD melees (Jax/Darius/Nasus/Riven) deal drastically reduced damage — DO NOT suggest them' :
+  matchupData.damageType === 'AD' ? 'AP squishies without mobility struggle — consider AP tanks or assassins with gapclosers' :
+  'mixed damage — evaluate each suggestion individually'
+}.`;
   }
 
   private buildBotlaneSection(

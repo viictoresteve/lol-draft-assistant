@@ -32,5 +32,9 @@ export class App implements OnInit {
 
   setLang(lang: Lang) {
     this.ls.setLang(lang);
+    // Re-trigger all AI analysis in the new language
+    // Each effect has its own filters (role required, picks required, etc.)
+    // so no unnecessary calls are made
+    this.store.dispatch(DraftActions.retryAnalysis());
   }
 }
