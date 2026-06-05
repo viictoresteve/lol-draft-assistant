@@ -21,7 +21,7 @@ export class App implements OnInit {
   patchService = inject(PatchService);
   settingsService = inject(SettingsService);
 
-  get hasApiKey() { return !!this.settingsService.apiKey(); }
+  get hasApiKey() { return this.settingsService.hasAnyKey(); }
 
   get patchVersion() { return this.patchService.version(); }
 

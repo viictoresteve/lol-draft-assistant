@@ -1,8 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { retry, switchMap, map } from 'rxjs/operators';
-import { timer } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
+import { AIHttpService } from '@core/services/ai-http.service';
 import { DraftPick, DraftRole, DraftSide, Suggestion, GameplayTip, GameplayPhase, CompSummary, ChampionTip, ChampionTipType } from '@features/draft/models/draft.interface';
 import { Champion } from '@shared/models/champion.interface';
 import { LanguageService } from '@core/services/language.service';
@@ -45,12 +44,11 @@ export interface CompSummaryRequest {
   providedIn: 'root',
 })
 export class AiService {
-  private http = inject(HttpClient);
+  private aiHttp = inject(AIHttpService);
   private ls = inject(LanguageService);
   private tierListService = inject(TierListService);
   private matchupService  = inject(MatchupService);
   private patchService    = inject(PatchService);
-  private readonly API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
   private get ddragonBase() {
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}`;
@@ -79,27 +77,9 @@ export class AiService {
         matchupFetch.pipe(
           switchMap((matchupData) => {
             const prompt = this.buildPrompt(request, tierData, matchupData);
-            return this.http
-              .post<any>(
-                this.API_URL,
-                {
-                  model: 'llama-3.3-70b-versatile',
-                  messages: [{ role: 'user', content: prompt }],
-                  temperature: 0.25,
-                  max_tokens: 2200,
-                },
-                { headers: { 'Content-Type': 'application/json' } },
-              )
-              .pipe(
-                retry({
-                  count: 3,
-                  delay: (error, retryCount) => {
-                    if (error.status === 429) return timer(retryCount * 3000);
-                    throw error;
-                  },
-                }),
-                map((response) => this.parseResponse(response)),
-              );
+            return this.aiHttp
+              .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.25, max_tokens: 2200 })
+              .pipe(map((res: any) => this.parseResponse(res)));
           }),
         ),
       ),
@@ -438,16 +418,9 @@ Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR")
 
   analyzeGameplay(request: GameplayRequest): Observable<GameplayTip[]> {
     const prompt = this.buildGameplayPrompt(request);
-    return this.http
-      .post<any>(
-        this.API_URL,
-        { model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 },
-        { headers: { 'Content-Type': 'application/json' } },
-      )
-      .pipe(
-        retry({ count: 2, delay: (err, n) => { if (err.status === 429) return timer(n * 3000); throw err; } }),
-        map((res) => this.parseGameplayResponse(res)),
-      );
+    return this.aiHttp
+      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 })
+      .pipe(map((res: any) => this.parseGameplayResponse(res)));
   }
 
   private buildGameplayPrompt(request: GameplayRequest): string {
@@ -517,15 +490,9 @@ Respond ONLY with a valid JSON array, no markdown.
 
   analyzeCompSummary(request: CompSummaryRequest): Observable<CompSummary> {
     const prompt = this.buildCompSummaryPrompt(request);
-    return this.http
-      .post<any>(
-        this.API_URL,
-        { model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 },
-        { headers: { 'Content-Type': 'application/json' } },
-      )
-      .pipe(
-        retry({ count: 2, delay: (err, n) => { if (err.status === 429) return timer(n * 3000); throw err; } }),
-        map((res) => this.parseCompSummaryResponse(res)),
+    return this.aiHttp
+      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 })
+      .pipe(map((res: any) => this.parseCompSummaryResponse(res)),
       );
   }
 
@@ -589,16 +556,9 @@ Rules for macroTips (3-4 items):
 
   analyzeChampionTips(request: ChampionTipsRequest): Observable<ChampionTip[]> {
     const prompt = this.buildChampionTipsPrompt(request);
-    return this.http
-      .post<any>(
-        this.API_URL,
-        { model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 },
-        { headers: { 'Content-Type': 'application/json' } },
-      )
-      .pipe(
-        retry({ count: 2, delay: (err, n) => { if (err.status === 429) return timer(n * 3000); throw err; } }),
-        map((res) => this.parseChampionTipsResponse(res)),
-      );
+    return this.aiHttp
+      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 })
+      .pipe(map((res: any) => this.parseChampionTipsResponse(res)));
   }
 
   private buildChampionTipsPrompt(request: ChampionTipsRequest): string {

@@ -1,57 +1,55 @@
 <div class="settings-page">
   <div class="settings-card">
-    <h2 class="settings-title">Settings</h2>
+    <h2 class="settings-title">AI Providers</h2>
+    <p class="settings-subtitle">
+      Configure one or more providers. The app tries them in order — if one fails or hits its rate limit, it automatically falls back to the next.
+    </p>
 
-    <section class="settings-section">
-      <h3 class="section-title">Groq API Key</h3>
-      <p class="section-desc">
-        Enter your Groq API key to use your own quota.
-        Get one free at <a href="https://console.groq.com" target="_blank" rel="noopener" class="link">console.groq.com</a>.
-      </p>
+    <!-- Provider list -->
+    @for (provider of providers; track provider.id; let i = $index) {
+      <section class="provider-section" [class.provider-active]="isActive(provider.id)">
+        <div class="provider-header">
+          <div class="provider-meta">
+            <span class="provider-order">{{ i + 1 }}</span>
+            <span class="provider-name">{{ provider.name }}</span>
+            @if (isActive(provider.id)) {
+              <span class="active-badge">Configured</span>
+            }
+          </div>
+          <a [href]="provider.freeKeyUrl" target="_blank" rel="noopener" class="get-key-link">
+            Get free key →
+          </a>
+        </div>
 
-      <div class="field">
-        <label class="field-label" for="api-key-input">API Key</label>
         <div class="input-row">
           <input
-            id="api-key-input"
             class="key-input"
-            [type]="showKey() ? 'text' : 'password'"
-            [value]="keyDraft()"
-            (input)="keyDraft.set($any($event.target).value)"
-            placeholder="gsk_..."
+            [id]="provider.id + '-key'"
+            [type]="showKeys[provider.id] ? 'text' : 'password'"
+            [value]="getDraft(provider.id)"
+            (input)="setDraft(provider.id, $any($event.target).value)"
+            [placeholder]="placeholders[provider.id]"
             autocomplete="off"
             spellcheck="false"
           />
           <button
             type="button"
             class="toggle-btn"
-            (click)="toggleShowKey()"
-            [attr.aria-label]="showKey() ? 'Hide key' : 'Show key'"
-            [title]="showKey() ? 'Hide' : 'Show'"
-          >{{ showKey() ? '🙈' : '👁' }}</button>
+            (click)="toggleShow(provider.id)"
+            [attr.aria-label]="showKeys[provider.id] ? 'Hide' : 'Show'"
+          >{{ showKeys[provider.id] ? '🙈' : '👁' }}</button>
         </div>
-        @if (settingsService.hasCustomKey()) {
-          <span class="custom-key-badge">Custom key active</span>
-        }
-      </div>
+      </section>
+    }
 
-      <button
-        class="save-btn"
-        [class.saved]="saved()"
-        (click)="save()"
-        type="button"
-      >
-        @if (saved()) { Saved! } @else { Save }
-      </button>
-    </section>
+    <button class="save-btn" [class.saved]="saved()" (click)="save()" type="button">
+      @if (saved()) { ✓ Saved } @else { Save }
+    </button>
 
-    <section class="settings-section info-section">
-      <h3 class="section-title">Patch Info</h3>
-      <div class="patch-row">
-        <span class="patch-label">Current patch:</span>
-        <span class="patch-value">{{ patchService.version() }}</span>
-      </div>
-      <p class="section-desc">Patch version is auto-detected from DDragon on app load.</p>
+    <!-- Patch info -->
+    <section class="info-section">
+      <span class="patch-label">DDragon patch:</span>
+      <span class="patch-value">{{ patchService.version() }}</span>
     </section>
   </div>
 </div>

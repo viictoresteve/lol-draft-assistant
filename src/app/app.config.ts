@@ -18,7 +18,6 @@ import { draftReducer } from '@store/draft/draft.reducer';
 import { poolReducer } from '@store/pool/pool.reducer';
 import { DraftEffects } from '@store/draft/draft.effects';
 import { PoolEffects } from '@store/pool/pool.effects';
-import { groqInterceptor } from '@core/interceptors/groq.interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './i18n/', '.json');
@@ -28,7 +27,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([groqInterceptor])),
+    provideHttpClient(withInterceptors([])),
     provideStore({
       draft: draftReducer,
       pool: poolReducer,
