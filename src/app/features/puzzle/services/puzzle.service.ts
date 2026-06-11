@@ -1,10 +1,14 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { AiService } from '@core/services/ai.service';
+import { DraftRole } from '@features/draft/models/draft.interface';
 import {
   DraftPuzzle, PuzzleResult, PuzzleChampion, PuzzleDifficulty, PuzzleAnswer,
   AttemptRecord, RoundResult, MatchPhase, TOTAL_ROUNDS, HARDCORE_MULTIPLIER,
   computeRoundPoints, applyRealDataFloor,
 } from '@features/puzzle/models/puzzle.interface';
+
+export type RoleChoice = DraftRole | 'random';
+const ALL_ROLES: DraftRole[] = ['top', 'jungle', 'mid', 'adc', 'support'];
 
 const STATS_KEY = 'lol-puzzle-stats';
 
@@ -26,7 +30,10 @@ export class PuzzleService {
   matchScore   = signal(0);
   roundResults = signal<RoundResult[]>([]);
   difficulty   = signal<PuzzleDifficulty>('medium');
+  roleChoice   = signal<RoleChoice>('random');
   hintsEnabled = signal(true);
+  /** The role actually used for the current round (resolves 'random') */
+  activeRole   = signal<DraftRole>('mid');
 
   // ── Current puzzle ──
   puzzle      = signal<DraftPuzzle | null>(null);
@@ -71,7 +78,14 @@ export class PuzzleService {
     this.revealedHints.set(0);
     this.generating.set(true);
 
-    this.ai.generatePuzzle(this.difficulty()).subscribe({
+    // Resolve the role for this round (random picks a fresh role each round)
+    const choice = this.roleChoice();
+    const role: DraftRole = choice === 'random'
+      ? ALL_ROLES[Math.floor(Math.random() * ALL_ROLES.length)]
+      : choice;
+    this.activeRole.set(role);
+
+    this.ai.generatePuzzle(this.difficulty(), role).subscribe({
       next: (p) => {
         if (p) {
           this.generating.set(false);

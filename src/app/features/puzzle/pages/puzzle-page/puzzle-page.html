@@ -20,6 +20,7 @@
         @if (!hintsEnabled()) {
           <div class="score-item hardcore"><span class="score-val">🔒</span><span class="score-lbl">{{ ls.T().puzzleHardcore }}</span></div>
         }
+        <button class="quit-btn" (click)="quit()" [title]="ls.T().puzzleQuit" [attr.aria-label]="ls.T().puzzleQuit">✕</button>
       </div>
     }
   </header>
@@ -34,7 +35,7 @@
           <span class="opt-label">{{ ls.T().puzzleDifficulty }}</span>
           <div class="difficulty-picker" role="group">
             @for (d of difficulties; track d) {
-              <button [class]="'diff-btn diff-' + d + (difficulty() === d ? ' active' : '')" (click)="setDifficulty(d)">
+              <button [class]="'diff-btn diff-' + d + (difficulty() === d ? ' active' : '')" [attr.aria-pressed]="difficulty() === d" (click)="setDifficulty(d)">
                 {{ tt('puzzleDiff_' + d) }}
               </button>
             }
@@ -50,6 +51,17 @@
               <span>🔒 {{ ls.T().puzzleHintsOff }} <b>+30%</b></span>
             }
           </button>
+        </div>
+      </div>
+
+      <div class="opt-block role-block">
+        <span class="opt-label">{{ ls.T().puzzleRoleLabel }}</span>
+        <div class="role-picker" role="group">
+          @for (r of roleChoices; track r) {
+            <button [class]="'role-pick role-' + r + (roleChoice() === r ? ' active' : '')" [attr.aria-pressed]="roleChoice() === r" (click)="setRoleChoice(r)">
+              {{ r === 'random' ? ls.T().puzzleRoleRandom : r }}
+            </button>
+          }
         </div>
       </div>
 
@@ -75,7 +87,7 @@
   @if (phase() === 'playing') {
 
     @if (generating()) {
-      <div class="pz-loading">
+      <div class="pz-loading" role="status" aria-live="polite">
         <div class="pz-spinner"></div>
         <p>{{ ls.T().puzzleGenerating }} ({{ roundLabel() }})</p>
       </div>

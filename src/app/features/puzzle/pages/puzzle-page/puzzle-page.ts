@@ -27,6 +27,7 @@ export class PuzzlePage {
   ls = inject(LanguageService);
 
   readonly roles = ROLES;
+  readonly roleChoices: ('random' | DraftRole)[] = ['random', 'top', 'jungle', 'mid', 'adc', 'support'];
   readonly difficulties: PuzzleDifficulty[] = ['easy', 'medium', 'hard'];
   readonly GRADE_META = GRADE_META;
 
@@ -47,6 +48,7 @@ export class PuzzlePage {
   grading       = this.puzzleService.grading;
   error         = this.puzzleService.error;
   difficulty    = this.puzzleService.difficulty;
+  roleChoice    = this.puzzleService.roleChoice;
   stats         = this.puzzleService.stats;
   attempts      = this.puzzleService.attempts;
   revealedHints = this.puzzleService.revealedHints;
@@ -137,6 +139,10 @@ export class PuzzlePage {
 
   setDifficulty(d: PuzzleDifficulty) {
     if (this.phase() === 'idle') this.difficulty.set(d);
+  }
+
+  setRoleChoice(r: 'random' | DraftRole) {
+    if (this.phase() === 'idle') this.roleChoice.set(r);
   }
 
   toggleHints() {

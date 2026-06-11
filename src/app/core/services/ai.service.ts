@@ -43,6 +43,11 @@ export interface CompSummaryRequest {
   enemyPicks: DraftPick[];
 }
 
+/** OpenAI-compatible chat completion envelope returned by all AI providers */
+interface AiChatResponse {
+  choices?: { message?: { content?: string } }[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -81,8 +86,8 @@ export class AiService {
           switchMap((matchupData) => {
             const prompt = this.buildPrompt(request, tierData, matchupData);
             return this.aiHttp
-              .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.25, max_tokens: 2200 })
-              .pipe(map((res: any) => this.parseResponse(res)));
+              .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.25, max_tokens: 2200 })
+              .pipe(map((res) => this.parseResponse(res)));
           }),
         ),
       ),
@@ -378,10 +383,15 @@ ${lines}
 Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR"). Do NOT put it in pros[].`;
   }
 
-  private parseResponse(response: any): Suggestion[] {
+  /** Safely extract + de-fence the JSON text from an AI chat response */
+  private content(res: AiChatResponse): string {
+    const raw = res?.choices?.[0]?.message?.content ?? '';
+    return raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  }
+
+  private parseResponse(res: AiChatResponse): Suggestion[] {
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
 
       return parsed.map((item: any) => {
@@ -422,8 +432,8 @@ Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR")
   analyzeGameplay(request: GameplayRequest): Observable<GameplayTip[]> {
     const prompt = this.buildGameplayPrompt(request);
     return this.aiHttp
-      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 })
-      .pipe(map((res: any) => this.parseGameplayResponse(res)));
+      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 })
+      .pipe(map((res) => this.parseGameplayResponse(res)));
   }
 
   private buildGameplayPrompt(request: GameplayRequest): string {
@@ -471,11 +481,10 @@ Respond ONLY with a valid JSON array, no markdown.
 [{"phase":"early","tip":"..."},...]`;
   }
 
-  private parseGameplayResponse(response: any): GameplayTip[] {
+  private parseGameplayResponse(res: AiChatResponse): GameplayTip[] {
     const VALID_PHASES = new Set<GameplayPhase>(['early', 'trade', 'teamfight', 'win', 'danger']);
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
       return (parsed as any[])
         .filter((item) => item?.phase && item?.tip)
@@ -494,8 +503,8 @@ Respond ONLY with a valid JSON array, no markdown.
   analyzeCompSummary(request: CompSummaryRequest): Observable<CompSummary> {
     const prompt = this.buildCompSummaryPrompt(request);
     return this.aiHttp
-      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 })
-      .pipe(map((res: any) => this.parseCompSummaryResponse(res)),
+      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 })
+      .pipe(map((res) => this.parseCompSummaryResponse(res)),
       );
   }
 
@@ -538,10 +547,9 @@ Rules for macroTips (3-4 items):
 — Specific to THESE two comps, not generic`;
   }
 
-  private parseCompSummaryResponse(response: any): CompSummary {
+  private parseCompSummaryResponse(res: AiChatResponse): CompSummary {
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
       return {
         allyCompName: String(parsed.allyCompName ?? '').trim(),
@@ -560,8 +568,8 @@ Rules for macroTips (3-4 items):
   analyzeChampionTips(request: ChampionTipsRequest): Observable<ChampionTip[]> {
     const prompt = this.buildChampionTipsPrompt(request);
     return this.aiHttp
-      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 })
-      .pipe(map((res: any) => this.parseChampionTipsResponse(res)));
+      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 })
+      .pipe(map((res) => this.parseChampionTipsResponse(res)));
   }
 
   private buildChampionTipsPrompt(request: ChampionTipsRequest): string {
@@ -605,11 +613,10 @@ Respond ONLY with valid JSON — no markdown:
 [{"type":"mechanic","tip":"..."},{"type":"synergy","tip":"..."}]`;
   }
 
-  private parseChampionTipsResponse(response: any): ChampionTip[] {
+  private parseChampionTipsResponse(res: AiChatResponse): ChampionTip[] {
     const VALID: Set<ChampionTipType> = new Set(['mechanic', 'synergy', 'combo', 'counterplay']);
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
       return (parsed as any[])
         .filter((item) => item?.type && item?.tip && VALID.has(item.type))
@@ -625,12 +632,12 @@ Respond ONLY with valid JSON — no markdown:
 
   // ── Draft Puzzle game ──────────────────────────────────────────────────────
 
-  generatePuzzle(difficulty: PuzzleDifficulty): Observable<DraftPuzzle | null> {
-    const prompt = this.buildPuzzlePrompt(difficulty);
+  generatePuzzle(difficulty: PuzzleDifficulty, role: DraftRole): Observable<DraftPuzzle | null> {
+    const prompt = this.buildPuzzlePrompt(difficulty, role);
     return this.aiHttp
-      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.85, max_tokens: 2400 })
+      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.9, max_tokens: 2400 })
       .pipe(
-        map((res: any) => this.parsePuzzleResponse(res, difficulty)),
+        map((res) => this.parsePuzzleResponse(res, difficulty, role)),
         switchMap((puzzle) => (puzzle ? this.enrichPuzzleWithRealData(puzzle) : of(null))),
       );
   }
@@ -696,13 +703,14 @@ Respond ONLY with valid JSON — no markdown:
   gradePick(puzzle: DraftPuzzle, championName: string): Observable<PuzzleAnswer> {
     const prompt = this.buildGradePrompt(puzzle, championName);
     return this.aiHttp
-      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 300 })
-      .pipe(map((res: any) => this.parseGradeResponse(res, championName)));
+      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 300 })
+      .pipe(map((res) => this.parseGradeResponse(res, championName)));
   }
 
-  private buildPuzzlePrompt(difficulty: PuzzleDifficulty): string {
+  private buildPuzzlePrompt(difficulty: PuzzleDifficulty, role: DraftRole): string {
     const patch = this.patchService.version();
     const langInstruction = this.ls.T().aiLang;
+    const ROLE = role.toUpperCase();
 
     const difficultyGuide = {
       easy: 'EASY: the correct answer is obvious — a glaring unmet need (no frontline and only tanks fit) or an obvious hard counter. A beginner should spot it.',
@@ -713,13 +721,14 @@ Respond ONLY with valid JSON — no markdown:
     return `You are a League of Legends draft-puzzle designer for a training game. Patch ${patch}.
 ${langInstruction}
 
-Create a REALISTIC ranked draft where exactly ONE pick is missing and there is a clearly BEST champion to fill it.
+Create a REALISTIC ranked draft where the player's ${ROLE} pick is missing and there is a clearly BEST champion to fill it.
+The missing slot is ALWAYS the player's own team (ally) in the ${ROLE} role. Make every puzzle DIFFERENT — vary champions, bans, scenario type and side. Do NOT reuse a template.
 
 DESIGN RULES:
+- The missing role is ${ROLE}. The ally team has 4 champions (NO ${ROLE}). The enemy team has all 5 (including their ${ROLE} laner so a real lane matchup exists).
 - Use only real champions valid for the current meta.
 - Each team has exactly 5 bans (realistic, high-priority bans). No champion appears twice anywhere.
-- The team WITH the missing pick has 4 champions (one role empty). The other team has 5.
-- The draft MUST create a clear NEED for the missing slot — one of:
+- The draft MUST create a clear NEED for the missing ${ROLE} slot — one of:
     • a missing damage type (e.g. comp is full AD → needs magic damage)
     • an unanswered enemy threat (e.g. fed-carry potential with no peel/CC)
     • an incomplete synergy begging completion (e.g. Yasuo with no knock-up)
@@ -754,10 +763,10 @@ Respond ONLY with valid JSON — no markdown, no text outside JSON:
   "hints": ["subtle hint", "medium hint", "obvious hint"],
   "difficulty": "${difficulty}",
   "missingTeam": "ally",
-  "missingRole": "mid",
-  "side": "blue",
-  "allyPicks": [{"role":"top","championId":"Ornn","championName":"Ornn"}, ... 4 entries, omit the missing role],
-  "enemyPicks": [{"role":"top","championId":"...","championName":"..."}, ... 5 entries],
+  "missingRole": "${role}",
+  "side": "blue or red — vary it",
+  "allyPicks": [ ... exactly 4 entries for the OTHER four roles, NEVER include role "${role}" ],
+  "enemyPicks": [ ... exactly 5 entries, one per role, INCLUDING "${role}" ],
   "allyBans": [{"championId":"Zed","championName":"Zed"}, ... 5],
   "enemyBans": [{"championId":"...","championName":"..."}, ... 5],
   "answers": [
@@ -769,10 +778,9 @@ Respond ONLY with valid JSON — no markdown, no text outside JSON:
 STRICT: All championId in valid DDragon format — NO spaces or apostrophes (MissFortune, KSante, BelVeth, ChoGath, KaiSa, Wukong=MonkeyKing). The missing role must be empty on the missing team. answers must NOT contain banned champions.`;
   }
 
-  private parsePuzzleResponse(response: any, difficulty: PuzzleDifficulty): DraftPuzzle | null {
+  private parsePuzzleResponse(res: AiChatResponse, difficulty: PuzzleDifficulty, role: DraftRole): DraftPuzzle | null {
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const p = JSON.parse(cleaned);
 
       const sanId = (s: string) => String(s ?? '').trim().replace(/['\s`.]/g, '');
@@ -797,14 +805,19 @@ STRICT: All championId in valid DDragon format — NO spaces or apostrophes (Mis
         .filter((h: string) => h.length > 0)
         .slice(0, 3);
 
+      // Force the requested role/team and guarantee the ally slot for it is empty
+      const allyPicks = (Array.isArray(p.allyPicks) ? p.allyPicks : [])
+        .map(pick)
+        .filter((pk: { role: DraftRole }) => pk.role !== role);
+
       return {
         id: Date.now().toString(),
         difficulty,
         scenario: String(p.scenario ?? '').trim(),
-        missingTeam: p.missingTeam === 'enemy' ? 'enemy' : 'ally',
-        missingRole: p.missingRole as DraftRole,
+        missingTeam: 'ally',
+        missingRole: role,
         side: p.side === 'red' ? 'red' : 'blue',
-        allyPicks: (Array.isArray(p.allyPicks) ? p.allyPicks : []).map(pick),
+        allyPicks,
         enemyPicks: (Array.isArray(p.enemyPicks) ? p.enemyPicks : []).map(pick),
         allyBans: (Array.isArray(p.allyBans) ? p.allyBans : []).map(champ),
         enemyBans: (Array.isArray(p.enemyBans) ? p.enemyBans : []).map(champ),
@@ -858,11 +871,10 @@ Grade this specific pick for this exact draft. Grades:
 Respond ONLY with valid JSON: {"grade":"good","reason":"8-20 words citing the specific draft reason"}`;
   }
 
-  private parseGradeResponse(response: any, championName: string): PuzzleAnswer {
+  private parseGradeResponse(res: AiChatResponse, championName: string): PuzzleAnswer {
     const VALID = new Set<PickGrade>(['perfect', 'great', 'good', 'questionable', 'trap']);
     try {
-      const text: string = response.choices[0].message.content;
-      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = this.content(res);
       const p = JSON.parse(cleaned);
       const grade: PickGrade = VALID.has(p.grade) ? p.grade : 'questionable';
       return {

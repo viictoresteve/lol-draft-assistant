@@ -78,6 +78,38 @@
 
 .score-item.hardcore { border-color: #5a4a2d; }
 
+.quit-btn {
+  background: transparent;
+  border: 1px solid #3a1a1a;
+  color: #7a3a3a;
+  width: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s;
+  &:hover { border-color: #c84040; color: #e84057; background: rgba(200,30,50,0.08); }
+}
+
+.role-block { margin-top: 14px; }
+.role-picker { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.role-pick {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #1e2a38;
+  background: #0f1820;
+  color: #4a6a7a;
+  cursor: pointer;
+  transition: all 0.15s;
+  &.active { border-color: #785a28; color: #c89b3c; background: #1a1610; }
+  &.role-random.active { border-color: #0a6a50; color: #0ac8b9; background: #0a2a20; }
+  &:hover { filter: brightness(1.25); }
+}
+
 .difficulty-picker { display: flex; gap: 6px; }
 .diff-btn {
   font-size: 11px;
