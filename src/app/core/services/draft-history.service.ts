@@ -33,9 +33,14 @@ export class DraftHistoryService {
     if (filledPicks < 2) return;
 
     const current = this.getAll();
-    const newEntry: DraftHistoryEntry = { ...entry, id: Date.now().toString(), timestamp: Date.now() };
+    const newEntry: DraftHistoryEntry = { ...entry, id: this.uid(), timestamp: Date.now() };
     const updated = [newEntry, ...current].slice(0, MAX);
     try { localStorage.setItem(KEY, JSON.stringify(updated)); } catch {}
+  }
+
+  /** Collision-resistant id (timestamp + random suffix) */
+  private uid(): string {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   updateResult(id: string, result: 'win' | 'loss') {
