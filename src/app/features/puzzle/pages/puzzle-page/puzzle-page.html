@@ -1,0 +1,308 @@
+<div class="puzzle-page">
+
+  <!-- ── Header ── -->
+  <header class="pz-header">
+    <div class="pz-title-row">
+      <h1 class="pz-title">{{ ls.T().puzzleTitle }}</h1>
+      <span class="pz-subtitle">{{ ls.T().puzzleSubtitle }}</span>
+    </div>
+
+    @if (phase() === 'playing') {
+      <div class="pz-scorebar">
+        <div class="score-item">
+          <span class="score-val">{{ roundLabel() }}</span>
+          <span class="score-lbl">{{ ls.T().puzzleRound }}</span>
+        </div>
+        <div class="score-item">
+          <span class="score-val">{{ matchScore() }}</span>
+          <span class="score-lbl">{{ ls.T().puzzleMatchScore }}</span>
+        </div>
+        @if (!hintsEnabled()) {
+          <div class="score-item hardcore"><span class="score-val">🔒</span><span class="score-lbl">{{ ls.T().puzzleHardcore }}</span></div>
+        }
+      </div>
+    }
+  </header>
+
+  <!-- ══════════ IDLE / START MENU ══════════ -->
+  @if (phase() === 'idle') {
+    <div class="pz-start">
+      <p class="start-desc">{{ ls.T().puzzleIntro }}</p>
+
+      <div class="start-options">
+        <div class="opt-block">
+          <span class="opt-label">{{ ls.T().puzzleDifficulty }}</span>
+          <div class="difficulty-picker" role="group">
+            @for (d of difficulties; track d) {
+              <button [class]="'diff-btn diff-' + d + (difficulty() === d ? ' active' : '')" (click)="setDifficulty(d)">
+                {{ tt('puzzleDiff_' + d) }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="opt-block">
+          <span class="opt-label">{{ ls.T().puzzleHintsLabel }}</span>
+          <button class="hints-toggle" [class.off]="!hintsEnabled()" (click)="toggleHints()">
+            @if (hintsEnabled()) {
+              <span>💡 {{ ls.T().puzzleHintsOn }}</span>
+            } @else {
+              <span>🔒 {{ ls.T().puzzleHintsOff }} <b>+30%</b></span>
+            }
+          </button>
+        </div>
+      </div>
+
+      @if (error() === 'NO_API_KEY') {
+        <p class="start-error">{{ ls.T().puzzleNoKey }} <a routerLink="/settings">Settings</a></p>
+      } @else if (error() === 'RATE_LIMITED') {
+        <p class="start-error">{{ ls.T().puzzleRateLimit }}</p>
+      }
+
+      <button class="start-btn" (click)="startMatch()">{{ ls.T().puzzleStartMatch }}</button>
+
+      @if (stats().matchesPlayed > 0) {
+        <div class="lifetime-stats">
+          <span>{{ ls.T().puzzleBestMatch }}: <b>{{ stats().bestMatchScore }}</b></span>
+          <span>{{ ls.T().puzzlePerfects }}: <b>{{ stats().perfectCount }}</b></span>
+          <span>{{ ls.T().puzzleMatchesPlayed }}: <b>{{ stats().matchesPlayed }}</b></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══════════ PLAYING ══════════ -->
+  @if (phase() === 'playing') {
+
+    @if (generating()) {
+      <div class="pz-loading">
+        <div class="pz-spinner"></div>
+        <p>{{ ls.T().puzzleGenerating }} ({{ roundLabel() }})</p>
+      </div>
+    }
+
+    @if (error() && !generating()) {
+      <div class="pz-start">
+        @if (error() === 'NO_API_KEY') {
+          <p class="start-error">{{ ls.T().puzzleNoKey }} <a routerLink="/settings">Settings</a></p>
+        } @else if (error() === 'RATE_LIMITED') {
+          <p class="start-error">{{ ls.T().puzzleRateLimit }}</p>
+        } @else {
+          <p class="start-error">{{ error() }}</p>
+        }
+        <button class="start-btn" (click)="retryRound()">↻</button>
+      </div>
+    }
+
+    @if (puzzle()) {
+      <div class="pz-board">
+
+        <!-- Scenario -->
+        <div class="pz-scenario">
+          <span class="scenario-diff" [class]="'diff-' + puzzle()!.difficulty">{{ tt('puzzleDiff_' + puzzle()!.difficulty) }}</span>
+          <p>{{ puzzle()!.scenario }}</p>
+          @if (puzzle()!.enemyDamageType) {
+            <span class="scenario-data" [title]="'Real OP.GG data — ' + puzzle()!.enemyLaner">
+              📊 {{ puzzle()!.enemyLaner }} · {{ puzzle()!.enemyDamageType }}
+            </span>
+          }
+        </div>
+
+        <!-- Drafts -->
+        <div class="pz-drafts">
+          <section class="pz-team my-team">
+            <div class="team-bar my-bar">
+              <span class="team-name">{{ ls.T().puzzleYourTeam }}</span>
+              <span class="team-side" [class]="'side-' + puzzle()!.side">{{ puzzle()!.side }}</span>
+            </div>
+            <div class="team-bans">
+              @for (b of myBans(); track $index) {
+                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" />
+              }
+            </div>
+            <div class="team-picks">
+              @for (slot of myTeam(); track slot.role) {
+                @if (slot.champion) {
+                  <div class="pick-row">
+                    <span class="pick-role">{{ slot.role }}</span>
+                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" />
+                    <span class="pick-name">{{ slot.champion.name }}</span>
+                  </div>
+                } @else {
+                  @if (result(); as r) {
+                    <div class="pick-row missing-filled" [style.--grade-color]="gradeColor(r.grade)">
+                      <span class="pick-role">{{ slot.role }}</span>
+                      <img class="pick-icon" [src]="champIcon(r.champion.id)" [alt]="r.champion.name" />
+                      <span class="pick-name">{{ r.champion.name }}</span>
+                      <span class="pick-grade" [style.color]="gradeColor(r.grade)">{{ GRADE_META[r.grade].emoji }}</span>
+                    </div>
+                  } @else {
+                    <div class="pick-row missing-empty">
+                      <span class="pick-role">{{ slot.role }}</span>
+                      <span class="missing-q">?</span>
+                      <span class="missing-hint">{{ ls.T().puzzlePickPrompt }}</span>
+                    </div>
+                  }
+                }
+              }
+            </div>
+          </section>
+
+          <div class="pz-vs">VS</div>
+
+          <section class="pz-team opp-team">
+            <div class="team-bar opp-bar"><span class="team-name">{{ ls.T().puzzleEnemyTeam }}</span></div>
+            <div class="team-bans">
+              @for (b of oppBans(); track $index) {
+                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" />
+              }
+            </div>
+            <div class="team-picks">
+              @for (slot of oppTeam(); track slot.role) {
+                <div class="pick-row" [class.empty-row]="!slot.champion">
+                  <span class="pick-role">{{ slot.role }}</span>
+                  @if (slot.champion) {
+                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" />
+                    <span class="pick-name">{{ slot.champion.name }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </section>
+        </div>
+
+        <!-- Attempts + hints (active) -->
+        @if (!result()) {
+          @if (attempts().length > 0) {
+            <div class="pz-attempts">
+              <span class="attempts-label">{{ ls.T().puzzleAttempts }}</span>
+              @for (a of attempts(); track a.champion.id) {
+                <div class="attempt-chip" [style.border-color]="gradeColor(a.grade)">
+                  <img [src]="champIcon(a.champion.id)" [alt]="a.champion.name" width="20" height="20" />
+                  <span>{{ a.champion.name }}</span>
+                  <span class="chip-grade" [style.color]="gradeColor(a.grade)">{{ tt('puzzleGrade_' + a.grade) }}</span>
+                </div>
+              }
+            </div>
+          }
+
+          @if (lastAttempt(); as la) {
+            <div class="pz-feedback" [style.--grade-color]="gradeColor(la.grade)">
+              <span class="feedback-grade" [style.color]="gradeColor(la.grade)">
+                {{ GRADE_META[la.grade].emoji }} {{ ls.T().puzzleNotIdeal }}
+              </span>
+              <p>{{ la.reason }}</p>
+            </div>
+          }
+
+          @if (visibleHints().length > 0) {
+            <div class="pz-hints">
+              @for (hint of visibleHints(); track $index; let i = $index) {
+                <div class="hint-row" [class.hint-strong]="i === visibleHints().length - 1">
+                  <span class="hint-num">{{ ls.T().puzzleHint }} {{ i + 1 }}</span>
+                  <span class="hint-text">{{ hint }}</span>
+                </div>
+              }
+            </div>
+          }
+        }
+
+        <!-- Picker -->
+        @if (!result() && !grading()) {
+          <div class="pz-picker">
+            <input class="picker-input" type="search"
+              [placeholder]="attempts().length > 0 ? ls.T().puzzleTryAgain : ls.T().puzzleSearchPrompt"
+              [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)"
+              autocomplete="off" autofocus />
+            @if (filteredChampions().length > 0) {
+              <div class="picker-grid">
+                @for (c of filteredChampions(); track c.id) {
+                  <button class="picker-champ" (click)="pick(c)" [title]="c.name">
+                    <img [src]="c.image" [alt]="c.name" width="44" height="44" loading="lazy" />
+                    <span>{{ c.name }}</span>
+                  </button>
+                }
+              </div>
+            } @else if (searchTerm().length > 0) {
+              <p class="picker-empty">{{ ls.T().noChampionsFound }}</p>
+            }
+            @if (attempts().length > 0) {
+              <button class="giveup-btn" (click)="giveUp()">{{ ls.T().puzzleGiveUp }}</button>
+            }
+          </div>
+        }
+
+        @if (grading()) {
+          <div class="pz-loading small"><div class="pz-spinner"></div><p>{{ ls.T().puzzleGrading }}</p></div>
+        }
+
+        <!-- Result -->
+        @if (result(); as r) {
+          <div class="pz-result" [style.--grade-color]="gradeColor(r.grade)">
+            <div class="result-head">
+              <span class="result-grade" [style.background]="gradeColor(r.grade)">
+                {{ GRADE_META[r.grade].emoji }} {{ r.gaveUp ? ls.T().puzzleRevealed : tt('puzzleGrade_' + r.grade) }}
+              </span>
+              <span class="result-points">+{{ r.points }} pts</span>
+            </div>
+            <p class="result-reason">{{ r.reason }}</p>
+
+            <div class="answer-key">
+              <p class="key-title">{{ ls.T().puzzleAnswerKey }}</p>
+              @for (a of puzzle()!.answers; track a.championId) {
+                <div class="key-row" [class.is-player]="isPlayerPick(a.championId)" [style.--g]="gradeColor(a.grade)">
+                  <img class="key-icon" [src]="champIcon(a.championId)" [alt]="a.championName" />
+                  <span class="key-name">{{ a.championName }}</span>
+                  <span class="key-grade" [style.color]="gradeColor(a.grade)">{{ tt('puzzleGrade_' + a.grade) }}</span>
+                  <span class="key-reason">
+                    @if (a.realWinRate) {
+                      <b class="key-wr" [title]="'OP.GG win rate vs ' + puzzle()!.enemyLaner">{{ a.realWinRate }}% WR</b>
+                    }
+                    {{ a.reason }}
+                  </span>
+                </div>
+              }
+            </div>
+
+            <button class="next-btn" (click)="next()">
+              {{ isLastRound() ? ls.T().puzzleSeeResults : ls.T().puzzleNextRound }} →
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ══════════ SUMMARY ══════════ -->
+  @if (phase() === 'summary') {
+    <div class="pz-summary">
+      <div class="summary-rank" [style.color]="matchRank().color" [style.border-color]="matchRank().color">
+        {{ matchRank().label }}
+      </div>
+      <h2 class="summary-title">{{ ls.T().puzzleMatchOver }}</h2>
+      <div class="summary-score">
+        <span class="big-score">{{ matchScore() }}</span>
+        <span class="max-score">/ {{ maxMatchScore() }}</span>
+      </div>
+
+      <div class="summary-rounds">
+        @for (rr of roundResults(); track rr.round) {
+          <div class="summary-round" [style.--g]="gradeColor(rr.grade)">
+            <span class="sr-num">{{ rr.round }}</span>
+            <img class="sr-icon" [src]="champIcon(rr.champion.id)" [alt]="rr.champion.name" />
+            <span class="sr-name">{{ rr.champion.name }}</span>
+            <span class="sr-grade" [style.color]="gradeColor(rr.grade)">
+              {{ GRADE_META[rr.grade].emoji }} {{ rr.gaveUp ? ls.T().puzzleRevealed : tt('puzzleGrade_' + rr.grade) }}
+            </span>
+            <span class="sr-pts">+{{ rr.points }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="summary-actions">
+        <button class="start-btn" (click)="startMatch()">{{ ls.T().puzzlePlayAgain }}</button>
+        <button class="menu-btn" (click)="quit()">{{ ls.T().puzzleMenu }}</button>
+      </div>
+    </div>
+  }
+</div>

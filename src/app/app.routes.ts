@@ -19,6 +19,11 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'puzzle',
+    loadComponent: () =>
+      import('./features/puzzle/pages/puzzle-page/puzzle-page').then((m) => m.PuzzlePage),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./features/settings/pages/settings-page/settings-page').then(

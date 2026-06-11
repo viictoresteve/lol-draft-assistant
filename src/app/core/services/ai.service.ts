@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { Observable, of, forkJoin } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { AIHttpService } from '@core/services/ai-http.service';
 import { DraftPick, DraftRole, DraftSide, Suggestion, GameplayTip, GameplayPhase, CompSummary, ChampionTip, ChampionTipType } from '@features/draft/models/draft.interface';
 import { Champion } from '@shared/models/champion.interface';
@@ -8,6 +8,9 @@ import { LanguageService } from '@core/services/language.service';
 import { TierListService, ChampionTierEntry } from '@core/services/tier-list.service';
 import { MatchupService, ChampionMatchupData } from '@core/services/matchup.service';
 import { PatchService } from '@core/services/patch.service';
+import {
+  DraftPuzzle, PuzzleAnswer, PuzzleDifficulty, PickGrade,
+} from '@features/puzzle/models/puzzle.interface';
 
 const SPELL_ID_MAP: Record<string, string> = {
   flash: 'SummonerFlash',
@@ -617,6 +620,259 @@ Respond ONLY with valid JSON — no markdown:
         }));
     } catch {
       return [];
+    }
+  }
+
+  // ── Draft Puzzle game ──────────────────────────────────────────────────────
+
+  generatePuzzle(difficulty: PuzzleDifficulty): Observable<DraftPuzzle | null> {
+    const prompt = this.buildPuzzlePrompt(difficulty);
+    return this.aiHttp
+      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.85, max_tokens: 2400 })
+      .pipe(
+        map((res: any) => this.parsePuzzleResponse(res, difficulty)),
+        switchMap((puzzle) => (puzzle ? this.enrichPuzzleWithRealData(puzzle) : of(null))),
+      );
+  }
+
+  /**
+   * Validate + enrich the puzzle with real OP.GG data:
+   *  1. Filter the answer key to champions ACTUALLY played in the missing role
+   *     (kills wrong-role picks like Sona-mid).
+   *  2. Reject the puzzle if the enemy laner isn't a real champion for that role.
+   *  3. Attach real lane-counter win rates.
+   * Returns null when the puzzle is unsalvageable (caller auto-retries).
+   */
+  private enrichPuzzleWithRealData(puzzle: DraftPuzzle): Observable<DraftPuzzle | null> {
+    const oppPicks = puzzle.missingTeam === 'ally' ? puzzle.enemyPicks : puzzle.allyPicks;
+    const enemyLaner = oppPicks.find((p) => p.role === puzzle.missingRole)?.champion;
+
+    const tierFetch = this.tierListService.getChampionTiers(puzzle.missingRole);
+    const counterFetch = enemyLaner
+      ? this.matchupService.getCounters(enemyLaner.name, puzzle.missingRole)
+      : of(null);
+
+    return forkJoin([tierFetch, counterFetch]).pipe(
+      map(([tierList, data]: [ChampionTierEntry[] | null, ChampionMatchupData | null]) => {
+        const norm = (s: string) => s.toLowerCase().replace(/['\s.]/g, '');
+
+        // 1) Real role membership: which champions actually play this role
+        let answers = puzzle.answers;
+        if (tierList && tierList.length > 0) {
+          const validRole = new Set(tierList.map((t) => norm(t.name)));
+
+          // Reject if the enemy laner isn't a real champion for this role → broken puzzle
+          if (enemyLaner && !validRole.has(norm(enemyLaner.name))) return null;
+
+          answers = answers.filter(
+            (a) => validRole.has(norm(a.championName)) || validRole.has(norm(a.championId)),
+          );
+          // Need at least one strong, valid answer left
+          if (!answers.some((a) => a.grade === 'perfect' || a.grade === 'great')) return null;
+        }
+
+        // 2) Enrich with real counter win rates
+        if (data) {
+          const wrByName = new Map(data.counters.map((c) => [norm(c.name), c.winRate]));
+          answers = answers.map((a) => {
+            const wr = wrByName.get(norm(a.championId)) ?? wrByName.get(norm(a.championName));
+            return wr != null ? { ...a, realWinRate: wr } : a;
+          });
+        }
+
+        return {
+          ...puzzle,
+          answers,
+          enemyLaner: enemyLaner?.name,
+          enemyDamageType: data?.damageType,
+          realCounters: data?.counters.map((c) => ({ name: c.name, winRate: c.winRate })),
+        } as DraftPuzzle;
+      }),
+      catchError(() => of(puzzle)),
+    );
+  }
+
+  /** Grade a champion that is NOT already in the puzzle's answer key */
+  gradePick(puzzle: DraftPuzzle, championName: string): Observable<PuzzleAnswer> {
+    const prompt = this.buildGradePrompt(puzzle, championName);
+    return this.aiHttp
+      .post<any>({ messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 300 })
+      .pipe(map((res: any) => this.parseGradeResponse(res, championName)));
+  }
+
+  private buildPuzzlePrompt(difficulty: PuzzleDifficulty): string {
+    const patch = this.patchService.version();
+    const langInstruction = this.ls.T().aiLang;
+
+    const difficultyGuide = {
+      easy: 'EASY: the correct answer is obvious — a glaring unmet need (no frontline and only tanks fit) or an obvious hard counter. A beginner should spot it.',
+      medium: 'MEDIUM: requires reading both comps and the lane matchup. Several reasonable picks, but a clear best one.',
+      hard: 'HARD: subtle — flex picks, win-condition nuance, or a counter to a specific carry threat. Multiple traps that look correct.',
+    }[difficulty];
+
+    return `You are a League of Legends draft-puzzle designer for a training game. Patch ${patch}.
+${langInstruction}
+
+Create a REALISTIC ranked draft where exactly ONE pick is missing and there is a clearly BEST champion to fill it.
+
+DESIGN RULES:
+- Use only real champions valid for the current meta.
+- Each team has exactly 5 bans (realistic, high-priority bans). No champion appears twice anywhere.
+- The team WITH the missing pick has 4 champions (one role empty). The other team has 5.
+- The draft MUST create a clear NEED for the missing slot — one of:
+    • a missing damage type (e.g. comp is full AD → needs magic damage)
+    • an unanswered enemy threat (e.g. fed-carry potential with no peel/CC)
+    • an incomplete synergy begging completion (e.g. Yasuo with no knock-up)
+    • a hard counter opportunity vs the enemy laner in that role
+- ${difficultyGuide}
+
+⛔ ROLE VALIDITY — THE #1 RULE, ZERO TOLERANCE:
+EVERY champion — in the draft picks AND in the answer key — MUST be a champion that is genuinely played in its assigned role in ranked this patch. NEVER place a champion in a role it does not play.
+- TOP: bruisers/tanks/juggernauts (Aatrox, Darius, Ornn, Renekton, Sett, Camille, Gnar, Jax, K'Sante, Malphite). Some ranged (Teemo, Quinn). NEVER bot-lane ADCs, NEVER enchanters.
+- JUNGLE: junglers only (Lee Sin, Viego, Vi, Kha'Zix, Hecarim, Sejuani, Nidalee, Kindred, Maokai). NEVER pure lane champs.
+- MID: mages & assassins (Ahri, Syndra, Orianna, Zed, Viktor, Sylas, Yone, Akali, Hwei, Vex). NEVER supports (NO Sona, Soraka, Janna, Lulu, Leona, Nautilus, Thresh, Karma), NEVER bot-lane ADCs.
+- ADC (bot carry): marksmen (Jinx, Caitlyn, Ezreal, Kai'Sa, Aphelios, Jhin, Ashe, Lucian, Xayah). NEVER tanks/bruisers/supports.
+- SUPPORT: engage tanks & enchanters (Leona, Nautilus, Thresh, Lulu, Janna, Soraka, Karma, Rakan, Braum, Pyke). NEVER mid mages played mid, NEVER ADCs, NEVER junglers.
+If you are not 100% sure a champion is played in the missing role this patch, DO NOT use it. A wrong-role pick (e.g. Sona in MID) is a critical failure that ruins the puzzle.
+
+ANSWER KEY (8-11 champions, graded):
+- 1-2 "perfect": the ideal pick(s) — best possible answer
+- 2-3 "great": strong, almost as good
+- 2-3 "good": playable, solves part of the need
+- 1-2 "questionable": works but suboptimal
+- 2-3 "trap": LOOK tempting but are WRONG here (wrong damage type vs their tank, gets hard-countered, redundant role) — these teach the lesson
+- Each "reason": 8-20 words, cite the SPECIFIC draft reason (name champions/threats).
+
+PROGRESSIVE HINTS (exactly 3, ordered subtle → obvious — shown one at a time when the player guesses wrong):
+- hints[0] SUBTLE: name the enemy comp's identity / win condition. NO champion names, NO answer. e.g. "Their team is a hard-engage dive comp built around catching one target."
+- hints[1] MEDIUM: point at what YOUR team is missing — the function/role needed. e.g. "You have no way to disengage or peel for your carries once they jump."
+- hints[2] OBVIOUS: describe the KIND of champion that solves it, still without naming the exact answer. e.g. "An enchanter with a hard disengage tool (knockback / airborne) would neutralize their engage."
+
+Respond ONLY with valid JSON — no markdown, no text outside JSON:
+{
+  "scenario": "1-2 sentences: the situation + what to weigh (no spoilers of the answer)",
+  "hints": ["subtle hint", "medium hint", "obvious hint"],
+  "difficulty": "${difficulty}",
+  "missingTeam": "ally",
+  "missingRole": "mid",
+  "side": "blue",
+  "allyPicks": [{"role":"top","championId":"Ornn","championName":"Ornn"}, ... 4 entries, omit the missing role],
+  "enemyPicks": [{"role":"top","championId":"...","championName":"..."}, ... 5 entries],
+  "allyBans": [{"championId":"Zed","championName":"Zed"}, ... 5],
+  "enemyBans": [{"championId":"...","championName":"..."}, ... 5],
+  "answers": [
+    {"championId":"Orianna","championName":"Orianna","grade":"perfect","reason":"AP shockwave counters their full-AD dive and adds the magic damage your comp lacks"},
+    {"championId":"Yasuo","championName":"Yasuo","grade":"trap","reason":"Tempting carry but adds no magic damage vs their armor-stacked Ornn/Malphite"}
+  ]
+}
+
+STRICT: All championId in valid DDragon format — NO spaces or apostrophes (MissFortune, KSante, BelVeth, ChoGath, KaiSa, Wukong=MonkeyKing). The missing role must be empty on the missing team. answers must NOT contain banned champions.`;
+  }
+
+  private parsePuzzleResponse(response: any, difficulty: PuzzleDifficulty): DraftPuzzle | null {
+    try {
+      const text: string = response.choices[0].message.content;
+      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const p = JSON.parse(cleaned);
+
+      const sanId = (s: string) => String(s ?? '').trim().replace(/['\s`.]/g, '');
+      const champ = (c: any) => ({ id: sanId(c?.championId ?? c?.id), name: String(c?.championName ?? c?.name ?? '').trim() });
+      const pick = (c: any) => ({ role: c?.role as DraftRole, champion: champ(c) });
+      const VALID_GRADES = new Set<PickGrade>(['perfect', 'great', 'good', 'questionable', 'trap']);
+
+      const answers: PuzzleAnswer[] = (Array.isArray(p.answers) ? p.answers : [])
+        .filter((a: any) => a?.championId && a?.grade && VALID_GRADES.has(a.grade))
+        .map((a: any) => ({
+          championId: sanId(a.championId),
+          championName: String(a.championName ?? a.championId).trim(),
+          grade: a.grade as PickGrade,
+          reason: String(a.reason ?? '').trim(),
+        }));
+
+      if (answers.length === 0) return null;
+      if (!answers.some((a) => a.grade === 'perfect' || a.grade === 'great')) return null;
+
+      const hints: string[] = (Array.isArray(p.hints) ? p.hints : [])
+        .map((h: unknown) => String(h ?? '').trim())
+        .filter((h: string) => h.length > 0)
+        .slice(0, 3);
+
+      return {
+        id: Date.now().toString(),
+        difficulty,
+        scenario: String(p.scenario ?? '').trim(),
+        missingTeam: p.missingTeam === 'enemy' ? 'enemy' : 'ally',
+        missingRole: p.missingRole as DraftRole,
+        side: p.side === 'red' ? 'red' : 'blue',
+        allyPicks: (Array.isArray(p.allyPicks) ? p.allyPicks : []).map(pick),
+        enemyPicks: (Array.isArray(p.enemyPicks) ? p.enemyPicks : []).map(pick),
+        allyBans: (Array.isArray(p.allyBans) ? p.allyBans : []).map(champ),
+        enemyBans: (Array.isArray(p.enemyBans) ? p.enemyBans : []).map(champ),
+        answers,
+        hints,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Real OP.GG counter data block for the grading prompt (empty if none) */
+  private buildGradeRealData(puzzle: DraftPuzzle): string {
+    if (!puzzle.enemyLaner || !puzzle.realCounters?.length) return '';
+    const top = puzzle.realCounters
+      .slice(0, 8)
+      .map((c) => `${c.name} (${c.winRate}% WR)`)
+      .join(', ');
+    return `
+=== REAL OP.GG DATA (authoritative — weigh heavily) ===
+Enemy ${puzzle.enemyLaner} is ${puzzle.enemyDamageType ?? 'MIXED'} damage.
+Champions with PROVEN win rates vs ${puzzle.enemyLaner} this patch: ${top}
+If the player's pick is in this list with >52% WR, it is a statistically strong lane pick — do NOT grade it "trap".`;
+  }
+
+  private buildGradePrompt(puzzle: DraftPuzzle, championName: string): string {
+    const langInstruction = this.ls.T().aiLang;
+    const fmt = (picks: { role: DraftRole; champion: { name: string } | null }[]) =>
+      picks.filter(p => p.champion).map(p => `${p.role}: ${p.champion!.name}`).join(', ');
+
+    const missingPicks = puzzle.missingTeam === 'ally' ? puzzle.allyPicks : puzzle.enemyPicks;
+    const otherPicks   = puzzle.missingTeam === 'ally' ? puzzle.enemyPicks : puzzle.allyPicks;
+
+    return `You are grading a League of Legends draft puzzle answer. Patch ${this.patchService.version()}.
+${langInstruction}
+
+The player must pick ${puzzle.missingRole.toUpperCase()} for their team.
+Their team: ${fmt(missingPicks)}
+Opposing team: ${fmt(otherPicks)}
+Scenario: ${puzzle.scenario}
+${this.buildGradeRealData(puzzle)}
+The player chose: ${championName.toUpperCase()}
+
+Grade this specific pick for this exact draft. Grades:
+  perfect — the ideal answer
+  great — strong, nearly ideal
+  good — solid, solves part of the need
+  questionable — works but clearly suboptimal
+  trap — looks tempting but is wrong here (explain why)
+
+Respond ONLY with valid JSON: {"grade":"good","reason":"8-20 words citing the specific draft reason"}`;
+  }
+
+  private parseGradeResponse(response: any, championName: string): PuzzleAnswer {
+    const VALID = new Set<PickGrade>(['perfect', 'great', 'good', 'questionable', 'trap']);
+    try {
+      const text: string = response.choices[0].message.content;
+      const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const p = JSON.parse(cleaned);
+      const grade: PickGrade = VALID.has(p.grade) ? p.grade : 'questionable';
+      return {
+        championId: championName.replace(/['\s`.]/g, ''),
+        championName,
+        grade,
+        reason: String(p.reason ?? '').trim() || 'No specific synergy or counter in this draft.',
+      };
+    } catch {
+      return { championId: championName.replace(/['\s`.]/g, ''), championName, grade: 'questionable', reason: 'Could not evaluate this pick.' };
     }
   }
 }
