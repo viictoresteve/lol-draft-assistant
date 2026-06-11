@@ -1,0 +1,180 @@
+<div class="quiz-page">
+
+  <!-- ── Header ── -->
+  <header class="qz-header">
+    <div class="qz-title-row">
+      <h1 class="qz-title">{{ ls.T().quizTitle }}</h1>
+      <span class="qz-subtitle">{{ ls.T().quizSubtitle }}</span>
+    </div>
+    @if (phase() === 'playing') {
+      <div class="qz-scorebar">
+        <div class="score-item"><span class="score-val">{{ roundLabel() }}</span><span class="score-lbl">{{ ls.T().quizRound }}</span></div>
+        <div class="score-item"><span class="score-val">{{ score() }}</span><span class="score-lbl">{{ ls.T().quizScore }}</span></div>
+        <button class="quit-btn" (click)="quit()" [title]="ls.T().quizMenu" [attr.aria-label]="ls.T().quizMenu">✕</button>
+      </div>
+    }
+  </header>
+
+  <!-- ══ IDLE ══ -->
+  @if (phase() === 'idle') {
+    <div class="qz-start">
+      <p class="start-desc">{{ ls.T().quizIntro }}</p>
+      <button class="start-btn" (click)="start()" [disabled]="loading()">
+        {{ loading() ? '…' : ls.T().quizStart }}
+      </button>
+      @if (error()) { <p class="start-error">{{ error() }}</p> }
+      @if (stats().gamesPlayed > 0) {
+        <div class="lifetime-stats">
+          <span>{{ ls.T().quizBest }}: <b>{{ stats().bestScore }}</b></span>
+          <span>{{ ls.T().quizPerfects }}: <b>{{ stats().perfectRounds }}</b></span>
+          <span>{{ ls.T().quizGames }}: <b>{{ stats().gamesPlayed }}</b></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══ PLAYING ══ -->
+  @if (phase() === 'playing') {
+
+    @if (loading() && !current()) {
+      <div class="qz-loading" role="status" aria-live="polite"><div class="qz-spinner"></div><p>{{ ls.T().quizLoading }}</p></div>
+    }
+
+    @if (current(); as r) {
+      <div class="qz-board">
+
+        <!-- Ability icon -->
+        <div class="ability-stage">
+          <div class="ability-icon-wrap" [class.revealed]="!!outcome()">
+            <img class="ability-icon" [src]="r.ability.iconUrl" [alt]="outcome() ? r.ability.name : 'Mystery ability'" />
+          </div>
+          @if (!outcome()) {
+            <p class="stage-prompt">{{ ls.T().quizPrompt }}</p>
+            @if (!hintUsed()) {
+              <button class="hint-btn" (click)="useHint()">💡 {{ ls.T().quizHint }} <b>−25</b></button>
+            } @else {
+              <p class="ability-desc">{{ r.ability.description }}</p>
+            }
+          }
+        </div>
+
+        <!-- ── Guess (active) ── -->
+        @if (!outcome()) {
+          <div class="qz-guess">
+            <!-- Champion -->
+            <div class="guess-block">
+              <span class="guess-label">{{ ls.T().quizChampion }}</span>
+              @if (guessedChampion(); as gc) {
+                <div class="picked-champ">
+                  <img [src]="gc.image" [alt]="gc.name" width="34" height="34" />
+                  <span>{{ gc.name }}</span>
+                  <button class="clear-x" (click)="clearChampion()">✕</button>
+                </div>
+              } @else {
+                <input class="champ-search" type="search" [placeholder]="ls.T().quizSearchChamp"
+                  [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" autocomplete="off" />
+                @if (searchResults().length > 0) {
+                  <div class="champ-results">
+                    @for (c of searchResults(); track c.id) {
+                      <button class="champ-opt" (click)="pickChampion(c)" [title]="c.name">
+                        <img [src]="c.image" [alt]="c.name" width="32" height="32" loading="lazy" />
+                        <span>{{ c.name }}</span>
+                      </button>
+                    }
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Slot -->
+            <div class="guess-block">
+              <span class="guess-label">{{ ls.T().quizSlot }}</span>
+              <div class="slot-btns" role="group" [attr.aria-label]="ls.T().quizSlot">
+                @for (s of slots; track s) {
+                  <button class="slot-btn" [class.active]="guessedSlot() === s"
+                    [attr.aria-pressed]="guessedSlot() === s" [attr.aria-label]="SLOT_META[s].label"
+                    [style.--sc]="SLOT_META[s].color" (click)="pickSlot(s)">{{ s }}</button>
+                }
+              </div>
+            </div>
+
+            <button class="submit-btn" [disabled]="!canSubmit()" (click)="submit()">{{ ls.T().quizSubmit }}</button>
+          </div>
+        }
+
+        <!-- ── Reveal ── -->
+        @if (outcome(); as o) {
+          <div class="qz-reveal">
+            <div class="reveal-head">
+              <span class="reveal-points">+{{ o.points }} pts</span>
+            </div>
+
+            <div class="reveal-answer">
+              <img class="ra-champ" [src]="o.champion.image" [alt]="o.champion.name" />
+              <div class="ra-text">
+                <span class="ra-name">
+                  <b [style.color]="SLOT_META[o.ability.slot].color">{{ SLOT_META[o.ability.slot].label }}</b>
+                  · {{ o.ability.name }}
+                </span>
+                <span class="ra-champ-name">{{ o.champion.name }}</span>
+              </div>
+            </div>
+
+            <div class="reveal-checks">
+              <span class="check" [class.ok]="o.championCorrect" [class.no]="!o.championCorrect">
+                {{ o.championCorrect ? '✓' : '✗' }} {{ ls.T().quizChampion }}
+              </span>
+              <span class="check" [class.ok]="o.slotCorrect" [class.no]="!o.slotCorrect">
+                {{ o.slotCorrect ? '✓' : '✗' }} {{ ls.T().quizSlot }}
+              </span>
+            </div>
+
+            <!-- All abilities of the champion -->
+            <div class="all-abilities">
+              @for (ab of r.allAbilities; track ab.slot) {
+                <div class="mini-ability" [class.is-answer]="ab.slot === o.ability.slot" [style.--sc]="SLOT_META[ab.slot].color">
+                  <img [src]="ab.iconUrl" [alt]="ab.name" />
+                  <span class="mini-slot">{{ ab.slot }}</span>
+                </div>
+              }
+            </div>
+
+            <button class="next-btn" (click)="next()">
+              {{ isLastRound() ? ls.T().quizSeeResults : ls.T().quizNext }} →
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ══ SUMMARY ══ -->
+  @if (phase() === 'summary') {
+    <div class="qz-summary">
+      <div class="summary-rank" [style.color]="matchRank().color" [style.border-color]="matchRank().color">
+        {{ matchRank().label }}
+      </div>
+      <h2 class="summary-title">{{ ls.T().quizComplete }}</h2>
+      <div class="summary-score"><span class="big-score">{{ score() }}</span><span class="max-score">/ {{ maxScore() }}</span></div>
+
+      <div class="summary-rounds">
+        @for (o of outcomes(); track $index) {
+          <div class="summary-round">
+            <img class="sr-icon" [src]="o.ability.iconUrl" [alt]="o.ability.name" />
+            <span class="sr-name">{{ o.champion.name }} <b [style.color]="SLOT_META[o.ability.slot].color">{{ o.ability.slot }}</b></span>
+            <span class="sr-checks">
+              <span [class.ok]="o.championCorrect" [class.no]="!o.championCorrect">{{ o.championCorrect ? '✓' : '✗' }}</span>
+              <span [class.ok]="o.slotCorrect" [class.no]="!o.slotCorrect">{{ o.slotCorrect ? '✓' : '✗' }}</span>
+            </span>
+            <span class="sr-pts">+{{ o.points }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="summary-actions">
+        <button class="start-btn" (click)="start()">{{ ls.T().quizPlayAgain }}</button>
+        <button class="menu-btn" (click)="quit()">{{ ls.T().quizMenu }}</button>
+      </div>
+    </div>
+  }
+</div>
