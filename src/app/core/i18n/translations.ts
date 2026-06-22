@@ -102,6 +102,8 @@ export const TRANSLATIONS = {
     puzzleMatchesPlayed: 'Matches',
     // Ability quiz
     navQuiz: 'Abilities',
+    apiKeyBanner: 'AI features (draft suggestions, gameplay tips, Draft Puzzle) need a free API key. The Ability Quiz works without one.',
+    apiKeyBannerCta: 'Add a free key in Settings',
     quizTitle: 'Ability Quiz',
     quizSubtitle: 'Name the champion & ability',
     quizIntro: 'An ability icon appears. Name the champion and which slot it is (Passive / Q / W / E / R). 10 rounds, real data from Data Dragon.',
@@ -230,6 +232,8 @@ export const TRANSLATIONS = {
     puzzleMatchesPlayed: 'Partidas',
     // Ability quiz
     navQuiz: 'Habilidades',
+    apiKeyBanner: 'Las funciones de IA (sugerencias de draft, consejos, Puzzle de Draft) necesitan una clave gratuita. El Quiz de Habilidades funciona sin clave.',
+    apiKeyBannerCta: 'Añade una clave gratis en Ajustes',
     quizTitle: 'Quiz de Habilidades',
     quizSubtitle: 'Adivina campeón y habilidad',
     quizIntro: 'Aparece el icono de una habilidad. Di de qué campeón es y qué slot (Pasiva / Q / W / E / R). 10 rondas, datos reales de Data Dragon.',

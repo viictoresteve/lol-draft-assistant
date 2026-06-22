@@ -156,11 +156,11 @@
   } @else if (error() && !isAnalyzing()) {
     <div class="error-state">
       @if (error() === 'NO_API_KEY') {
-        <p class="error-msg">No Groq API key configured</p>
-        <p class="error-hint">Add your key in <a href="/settings" style="color:#c89b3c">Settings</a></p>
+        <p class="error-msg">No AI key configured</p>
+        <p class="error-hint">Add a free key in <a href="/settings" style="color:#c89b3c">Settings</a></p>
       } @else if (error() === 'RATE_LIMITED') {
         <p class="error-msg">Rate limit hit — wait a moment</p>
-        <p class="error-hint">Groq free tier has request limits</p>
+        <p class="error-hint">Free AI tiers have request limits</p>
         <button class="retry-btn" (click)="retry()">Try again</button>
       } @else {
         <p class="error-msg">AI analysis failed</p>

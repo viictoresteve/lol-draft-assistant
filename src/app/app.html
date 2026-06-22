@@ -24,8 +24,8 @@
 </nav>
 @if (!hasApiKey) {
   <div class="api-key-banner" role="alert">
-    <span>⚠ No Groq API key configured — AI suggestions won't work.</span>
-    <a routerLink="/settings" class="banner-link">Add key in Settings →</a>
+    <span>⚠ {{ ls.T().apiKeyBanner }}</span>
+    <a routerLink="/settings" class="banner-link">{{ ls.T().apiKeyBannerCta }} →</a>
   </div>
 }
 <app-onboarding />
