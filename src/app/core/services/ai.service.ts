@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, forkJoin } from 'rxjs';
-import { switchMap, map, catchError } from 'rxjs/operators';
+import { Observable, of, forkJoin, throwError } from 'rxjs';
+import { switchMap, map, catchError, shareReplay } from 'rxjs/operators';
 import { AIHttpService } from '@core/services/ai-http.service';
 import { DraftPick, DraftRole, DraftSide, Suggestion, GameplayTip, GameplayPhase, CompSummary, ChampionTip, ChampionTipType } from '@features/draft/models/draft.interface';
 import { Champion } from '@shared/models/champion.interface';
@@ -58,6 +58,34 @@ export class AiService {
   private matchupService  = inject(MatchupService);
   private patchService    = inject(PatchService);
 
+  /**
+   * In-memory cache of AI responses keyed by the exact prompt, so identical
+   * draft states (re-renders, language toggles, repeated effect triggers) don't
+   * burn rate-limited API calls. Short TTL keeps results fresh.
+   */
+  private promptCache = new Map<string, { obs: Observable<unknown>; expires: number }>();
+  private static readonly CACHE_TTL_MS = 3 * 60 * 1000;
+
+  /** Run an AI call through the prompt cache (dedup + short-lived reuse). */
+  private cached<T>(prompt: string, factory: () => Observable<T>): Observable<T> {
+    const now = Date.now();
+    const hit = this.promptCache.get(prompt);
+    if (hit && hit.expires > now) return hit.obs as Observable<T>;
+
+    const obs: Observable<T> = factory().pipe(
+      // Never cache failures — evict so a retry makes a fresh call
+      catchError((err) => { this.promptCache.delete(prompt); return throwError(() => err); }),
+      shareReplay(1),
+    );
+    this.promptCache.set(prompt, { obs, expires: now + AiService.CACHE_TTL_MS });
+
+    // Opportunistic cleanup of expired entries
+    if (this.promptCache.size > 50) {
+      for (const [k, v] of this.promptCache) if (v.expires <= now) this.promptCache.delete(k);
+    }
+    return obs;
+  }
+
   private get ddragonBase() {
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}`;
   }
@@ -85,9 +113,9 @@ export class AiService {
         matchupFetch.pipe(
           switchMap((matchupData) => {
             const prompt = this.buildPrompt(request, tierData, matchupData);
-            return this.aiHttp
+            return this.cached(prompt, () => this.aiHttp
               .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.25, max_tokens: 2200 })
-              .pipe(map((res) => this.parseResponse(res)));
+              .pipe(map((res) => this.parseResponse(res))));
           }),
         ),
       ),
@@ -436,9 +464,9 @@ Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR")
 
   analyzeGameplay(request: GameplayRequest): Observable<GameplayTip[]> {
     const prompt = this.buildGameplayPrompt(request);
-    return this.aiHttp
+    return this.cached(prompt, () => this.aiHttp
       .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 })
-      .pipe(map((res) => this.parseGameplayResponse(res)));
+      .pipe(map((res) => this.parseGameplayResponse(res))));
   }
 
   private buildGameplayPrompt(request: GameplayRequest): string {
@@ -508,10 +536,9 @@ Respond ONLY with a valid JSON object, no markdown:
 
   analyzeCompSummary(request: CompSummaryRequest): Observable<CompSummary> {
     const prompt = this.buildCompSummaryPrompt(request);
-    return this.aiHttp
+    return this.cached(prompt, () => this.aiHttp
       .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 })
-      .pipe(map((res) => this.parseCompSummaryResponse(res)),
-      );
+      .pipe(map((res) => this.parseCompSummaryResponse(res))));
   }
 
   private buildCompSummaryPrompt(request: CompSummaryRequest): string {
@@ -573,9 +600,9 @@ Rules for macroTips (3-4 items):
 
   analyzeChampionTips(request: ChampionTipsRequest): Observable<ChampionTip[]> {
     const prompt = this.buildChampionTipsPrompt(request);
-    return this.aiHttp
+    return this.cached(prompt, () => this.aiHttp
       .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 })
-      .pipe(map((res) => this.parseChampionTipsResponse(res)));
+      .pipe(map((res) => this.parseChampionTipsResponse(res))));
   }
 
   private buildChampionTipsPrompt(request: ChampionTipsRequest): string {
