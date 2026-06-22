@@ -2,7 +2,7 @@
 
 > AI-powered League of Legends champion-select assistant, grounded in **real match data**. Get live draft suggestions, counter analysis, and gameplay coaching — plus two training mini-games. Built with Angular 21 + NgRx and a small Node/Express data proxy.
 
-![CI](https://github.com/USER/lol-draft-assistant/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/viictoresteve/lol-draft-assistant/actions/workflows/ci.yml/badge.svg)
 &nbsp;Angular 21 · NgRx · TypeScript (strict) · PWA · i18n (EN/ES)
 
 ---
@@ -12,16 +12,16 @@
 During (or before) champion select, you fill in both teams' picks and bans and pick your role. The app then gives you:
 
 - **Ranked champion suggestions** for your role, each with tactical pros/cons, summoner spells, and a real tier/win-rate badge.
-- **Counter analysis** sourced from live OP.GG data — the AI's opinion is *cross-checked against real lane win rates*, so a champion the data proves wins lane is never mislabeled.
+- **Counter analysis** sourced from live OP.GG data — the AI's opinion is _cross-checked against real lane win rates_, so a champion the data proves wins lane is never mislabeled.
 - **Composition analysis** — detects each team's archetype (Dive, Poke, Protect-the-Carry…) and gives macro strategy.
 - **Gameplay coaching** once the draft is complete: early/trade/teamfight/win-condition tips, plus niche champion mechanics.
 
 ### Two training mini-games
 
-| Game | What you do | Data source |
-|---|---|---|
+| Game             | What you do                                                                                                                     | Data source                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | **Draft Puzzle** | A 5-round match: two drafts with one missing pick — find the best champion. Progressive hints, real-data-validated answer keys. | AI (Gemini/Groq) + OP.GG validation |
-| **Ability Quiz** | See an ability icon, name the champion and slot (P/Q/W/E/R). 10 rounds. | 100% Data Dragon (no AI) |
+| **Ability Quiz** | See an ability icon, name the champion and slot (P/Q/W/E/R). 10 rounds.                                                         | 100% Data Dragon (no AI)            |
 
 ---
 
@@ -85,13 +85,13 @@ Then open `http://localhost:4200`, go to **⚙ Settings**, and paste your AI key
 
 ### Scripts
 
-| Command | Description |
-|---|---|
-| `npm start` | Angular dev server only |
-| `npm run dev` | Angular + proxy in parallel |
-| `npm run build` | Production build (PWA enabled) |
-| `npm test` | Unit tests (Vitest) |
-| `npm run proxy:dev` | Proxy only |
+| Command             | Description                    |
+| ------------------- | ------------------------------ |
+| `npm start`         | Angular dev server only        |
+| `npm run dev`       | Angular + proxy in parallel    |
+| `npm run build`     | Production build (PWA enabled) |
+| `npm test`          | Unit tests (Vitest)            |
+| `npm run proxy:dev` | Proxy only                     |
 
 ---
 
@@ -100,7 +100,7 @@ Then open `http://localhost:4200`, go to **⚙ Settings**, and paste your AI key
 Deterministic unit tests cover the logic that matters — scoring, data-grounding, parsing, and persistence — rather than trivial "should create" stubs.
 
 ```bash
-npm test                     # frontend: 59 tests
+npm test                     # frontend: 61 tests
 cd server && npm test        # proxy: 16 tests
 ```
 
