@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@a
 import { AbilityQuizService } from '@features/ability-quiz/services/ability-quiz.service';
 import { LanguageService } from '@core/services/language.service';
 import { Champion } from '@shared/models/champion.interface';
+import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
 import {
   AbilitySlot, ABILITY_SLOTS, SLOT_META,
 } from '@features/ability-quiz/models/ability-quiz.interface';
@@ -9,7 +10,7 @@ import {
 @Component({
   selector: 'app-ability-quiz-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [ImgFallbackDirective],
   templateUrl: './ability-quiz-page.html',
   styleUrl: './ability-quiz-page.scss',
 })
@@ -86,6 +87,11 @@ export class AbilityQuizPage {
   quit() {
     this.resetGuess();
     this.quiz.quitToMenu();
+  }
+
+  retryRound() {
+    this.resetGuess();
+    this.quiz.retryRound();
   }
 
   useHint() { this.quiz.useHint(); }

@@ -12,6 +12,24 @@ export interface ChampionTierEntry {
   pickRate: number | null;
 }
 
+/** Loose shape of an OP.GG / proxy tier item — fields vary by source, all optional */
+interface TierItem {
+  champion_name?: string;
+  name?: string;
+  tier?: string | number;
+  tier_data?: { tier?: number };
+  average_tier_data?: { tier_data?: { tier?: number } };
+  win_rate?: number;
+  winrate?: number;
+  pick_rate?: number;
+  pickrate?: number;
+}
+interface TierResponse {
+  champion_stats?: TierItem[];
+  champions?: TierItem[];
+  data?: { champion_stats?: TierItem[]; champions?: TierItem[] };
+}
+
 const TIER_LABELS: Record<number, string> = { 1: 'S', 2: 'A', 3: 'B', 4: 'C', 5: 'D' };
 const TIER_STRINGS = new Set(['S', 'A', 'B', 'C', 'D']);
 
@@ -39,7 +57,7 @@ export class TierListService {
     if (this.cache.has(role)) {
       return this.cache.get(role)!;
     }
-    const req$ = this.http.get<any>(buildUrl(role)).pipe(
+    const req$ = this.http.get<TierResponse>(buildUrl(role)).pipe(
       map((res) => this.parse(res)),
       catchError(() => of(null)),
       shareReplay(1),
@@ -48,8 +66,8 @@ export class TierListService {
     return req$;
   }
 
-  private parse(res: any): ChampionTierEntry[] {
-    const items: any[] =
+  private parse(res: TierResponse): ChampionTierEntry[] {
+    const items: TierItem[] =
       res?.data?.champion_stats ??
       res?.champion_stats ??
       res?.data?.champions ??
@@ -57,14 +75,14 @@ export class TierListService {
       [];
 
     return items
-      .map((item: any) => ({
+      .map((item) => ({
         name: String(item?.champion_name ?? item?.name ?? '').trim(),
         tier: TIER_STRINGS.has(String(item?.tier))
           ? String(item.tier)   // already mapped to S/A/B/C/D by proxy
           : (TIER_LABELS[
               item?.average_tier_data?.tier_data?.tier ??
               item?.tier_data?.tier ??
-              item?.tier ?? 0
+              (typeof item?.tier === 'number' ? item.tier : 0)
             ] ?? ''),
         winRate: item?.win_rate ?? item?.winrate ?? null,
         pickRate: item?.pick_rate ?? item?.pickrate ?? null,

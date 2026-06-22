@@ -1,8 +1,19 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, defer, map, shareReplay } from 'rxjs';
-import { Champion } from '@shared/models/champion.interface';
+import { Champion, ChampionTag } from '@shared/models/champion.interface';
 import { PatchService } from '@core/services/patch.service';
+
+/** Shape of the entries in DDragon's champion.json */
+interface DDragonChampion {
+  id: string;
+  name: string;
+  title: string;
+  tags: ChampionTag[];
+}
+interface DDragonChampionList {
+  data: Record<string, DDragonChampion>;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +25,7 @@ export class ChampionsService {
   private readonly champions$: Observable<Champion[]> = defer(() => {
     const version = this.patchService.version();
     return this.http
-      .get<any>(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
+      .get<DDragonChampionList>(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
       .pipe(map((response) => this.mapToChampions(response.data, version)));
   }).pipe(shareReplay(1));
 
@@ -26,8 +37,8 @@ export class ChampionsService {
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
   }
 
-  private mapToChampions(data: any, version: string): Champion[] {
-    return Object.values(data).map((champ: any) => ({
+  private mapToChampions(data: Record<string, DDragonChampion>, version: string): Champion[] {
+    return Object.values(data).map((champ) => ({
       id: champ.id,
       name: champ.name,
       title: champ.title,

@@ -129,7 +129,7 @@
             </div>
             <div class="team-bans">
               @for (b of myBans(); track $index) {
-                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" />
+                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" imgFallback />
               }
             </div>
             <div class="team-picks">
@@ -137,14 +137,14 @@
                 @if (slot.champion) {
                   <div class="pick-row">
                     <span class="pick-role">{{ slot.role }}</span>
-                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" />
+                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" imgFallback />
                     <span class="pick-name">{{ slot.champion.name }}</span>
                   </div>
                 } @else {
                   @if (result(); as r) {
                     <div class="pick-row missing-filled" [style.--grade-color]="gradeColor(r.grade)">
                       <span class="pick-role">{{ slot.role }}</span>
-                      <img class="pick-icon" [src]="champIcon(r.champion.id)" [alt]="r.champion.name" />
+                      <img class="pick-icon" [src]="champIcon(r.champion.id)" [alt]="r.champion.name" imgFallback />
                       <span class="pick-name">{{ r.champion.name }}</span>
                       <span class="pick-grade" [style.color]="gradeColor(r.grade)">{{ GRADE_META[r.grade].emoji }}</span>
                     </div>
@@ -166,7 +166,7 @@
             <div class="team-bar opp-bar"><span class="team-name">{{ ls.T().puzzleEnemyTeam }}</span></div>
             <div class="team-bans">
               @for (b of oppBans(); track $index) {
-                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" />
+                <img class="ban-thumb" [src]="champIcon(b.id)" [alt]="b.name" [title]="'Banned: ' + b.name" imgFallback />
               }
             </div>
             <div class="team-picks">
@@ -174,7 +174,7 @@
                 <div class="pick-row" [class.empty-row]="!slot.champion">
                   <span class="pick-role">{{ slot.role }}</span>
                   @if (slot.champion) {
-                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" />
+                    <img class="pick-icon" [src]="champIcon(slot.champion.id)" [alt]="slot.champion.name" imgFallback />
                     <span class="pick-name">{{ slot.champion.name }}</span>
                   }
                 </div>
@@ -190,7 +190,7 @@
               <span class="attempts-label">{{ ls.T().puzzleAttempts }}</span>
               @for (a of attempts(); track a.champion.id) {
                 <div class="attempt-chip" [style.border-color]="gradeColor(a.grade)">
-                  <img [src]="champIcon(a.champion.id)" [alt]="a.champion.name" width="20" height="20" />
+                  <img [src]="champIcon(a.champion.id)" [alt]="a.champion.name" width="20" height="20" imgFallback />
                   <span>{{ a.champion.name }}</span>
                   <span class="chip-grade" [style.color]="gradeColor(a.grade)">{{ tt('puzzleGrade_' + a.grade) }}</span>
                 </div>
@@ -230,7 +230,7 @@
               <div class="picker-grid">
                 @for (c of filteredChampions(); track c.id) {
                   <button class="picker-champ" (click)="pick(c)" [title]="c.name">
-                    <img [src]="c.image" [alt]="c.name" width="44" height="44" loading="lazy" />
+                    <img [src]="c.image" [alt]="c.name" width="44" height="44" loading="lazy" imgFallback />
                     <span>{{ c.name }}</span>
                   </button>
                 }
@@ -263,7 +263,7 @@
               <p class="key-title">{{ ls.T().puzzleAnswerKey }}</p>
               @for (a of puzzle()!.answers; track a.championId) {
                 <div class="key-row" [class.is-player]="isPlayerPick(a.championId)" [style.--g]="gradeColor(a.grade)">
-                  <img class="key-icon" [src]="champIcon(a.championId)" [alt]="a.championName" />
+                  <img class="key-icon" [src]="champIcon(a.championId)" [alt]="a.championName" imgFallback />
                   <span class="key-name">{{ a.championName }}</span>
                   <span class="key-grade" [style.color]="gradeColor(a.grade)">{{ tt('puzzleGrade_' + a.grade) }}</span>
                   <span class="key-reason">
@@ -301,7 +301,7 @@
         @for (rr of roundResults(); track rr.round) {
           <div class="summary-round" [style.--g]="gradeColor(rr.grade)">
             <span class="sr-num">{{ rr.round }}</span>
-            <img class="sr-icon" [src]="champIcon(rr.champion.id)" [alt]="rr.champion.name" />
+            <img class="sr-icon" [src]="champIcon(rr.champion.id)" [alt]="rr.champion.name" imgFallback />
             <span class="sr-name">{{ rr.champion.name }}</span>
             <span class="sr-grade" [style.color]="gradeColor(rr.grade)">
               {{ GRADE_META[rr.grade].emoji }} {{ rr.gaveUp ? ls.T().puzzleRevealed : tt('puzzleGrade_' + rr.grade) }}

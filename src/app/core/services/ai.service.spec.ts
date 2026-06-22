@@ -46,6 +46,19 @@ describe('AiService', () => {
       expect(result[0].cons).toHaveLength(1);
     });
 
+    it('accepts a { suggestions: [...] } wrapper (JSON-mode output)', () => {
+      const wrapped = { suggestions: [
+        { championId: 'Ahri', championName: 'Ahri', tierInfo: 'S-tier', summonerSpells: [], pros: [], cons: [], botlanePairs: [] },
+      ] };
+      const result = priv.parseResponse(makeResponse(JSON.stringify(wrapped)));
+      expect(result).toHaveLength(1);
+      expect(result[0].champion.id).toBe('Ahri');
+    });
+
+    it('returns [] when neither an array nor a known wrapper key is present', () => {
+      expect(priv.parseResponse(makeResponse(JSON.stringify({ foo: 'bar' })))).toEqual([]);
+    });
+
     it('sanitizes champion IDs — removes spaces', () => {
       const raw = [{ championId: 'Miss Fortune', championName: 'Miss Fortune', tierInfo: '', summonerSpells: [], pros: [], cons: [], botlanePairs: [] }];
       const result = priv.parseResponse(makeResponse(JSON.stringify(raw)));

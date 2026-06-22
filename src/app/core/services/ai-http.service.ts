@@ -11,6 +11,8 @@ export interface AIProvider {
   model: string;
   getKey: (s: SettingsService) => string;
   freeKeyUrl: string;
+  /** Provider reliably supports OpenAI `response_format: json_object` */
+  jsonMode: boolean;
 }
 
 export const AI_PROVIDERS: AIProvider[] = [
@@ -21,6 +23,7 @@ export const AI_PROVIDERS: AIProvider[] = [
     model: 'gemini-2.0-flash',
     getKey: (s) => s.geminiApiKey(),
     freeKeyUrl: 'https://aistudio.google.com/apikey',
+    jsonMode: true,
   },
   {
     id: 'groq',
@@ -29,6 +32,7 @@ export const AI_PROVIDERS: AIProvider[] = [
     model: 'llama-3.3-70b-versatile',
     getKey: (s) => s.apiKey(),
     freeKeyUrl: 'https://console.groq.com/keys',
+    jsonMode: true,
   },
   {
     id: 'openrouter',
@@ -37,6 +41,7 @@ export const AI_PROVIDERS: AIProvider[] = [
     model: 'meta-llama/llama-3.3-70b-instruct:free',
     getKey: (s) => s.openRouterApiKey(),
     freeKeyUrl: 'https://openrouter.ai/keys',
+    jsonMode: false, // free models reject response_format inconsistently
   },
 ];
 
@@ -72,10 +77,16 @@ export class AIHttpService {
     const provider = providers[idx];
     const key = provider.getKey(this.settings);
 
+    // Force valid-JSON output on providers that support it — cuts parse failures.
+    // (All our prompts already instruct "respond ONLY with valid JSON".)
+    const payload = provider.jsonMode
+      ? { ...body, model: provider.model, response_format: { type: 'json_object' } }
+      : { ...body, model: provider.model };
+
     return this.http
       .post<T>(
         provider.url,
-        { ...body, model: provider.model },
+        payload,
         { headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' } },
       )
       .pipe(

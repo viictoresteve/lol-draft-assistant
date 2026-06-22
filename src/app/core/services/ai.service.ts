@@ -234,29 +234,32 @@ ${poolSection}
 ${botlaneSection}
 
 === OUTPUT FORMAT ===
-Respond ONLY with a valid JSON array — no markdown, no text outside JSON.
+Respond ONLY with a valid JSON object — no markdown, no text outside JSON.
+Return a top-level object with a "suggestions" array:
 
-[
-  {
-    "championId": "Renekton",
-    "championName": "Renekton",
-    "tierInfo": "A-tier · 51% WR",
-    "summonerSpells": ["Flash", "Ignite"],
-    "pros": [
-      "Sejuani Frost + Renekton W = guaranteed 3s chain CC",
-      "Destroys Nasus/Gnar in lane pre-6",
-      "Ult Dominus absorbs Malphite R burst damage",
-      "Shuts down Gnar before Mega form transforms"
-    ],
-    "cons": [
-      "Falls off hard late game"
-    ],
-    "botlanePairs": [
-      {"id": "Seraphine", "name": "Seraphine", "synergy": "Seraphine E roots auto-trigger on Ashe Frost-slowed targets"},
-      {"id": "Lux", "name": "Lux", "synergy": "Lux Q pins enemies onto Caitlyn Yordle Snap Trap for headshot proc"}
-    ]
-  }
-]
+{
+  "suggestions": [
+    {
+      "championId": "Renekton",
+      "championName": "Renekton",
+      "tierInfo": "A-tier · 51% WR",
+      "summonerSpells": ["Flash", "Ignite"],
+      "pros": [
+        "Sejuani Frost + Renekton W = guaranteed 3s chain CC",
+        "Destroys Nasus/Gnar in lane pre-6",
+        "Ult Dominus absorbs Malphite R burst damage",
+        "Shuts down Gnar before Mega form transforms"
+      ],
+      "cons": [
+        "Falls off hard late game"
+      ],
+      "botlanePairs": [
+        {"id": "Seraphine", "name": "Seraphine", "synergy": "Seraphine E roots auto-trigger on Ashe Frost-slowed targets"},
+        {"id": "Lux", "name": "Lux", "synergy": "Lux Q pins enemies onto Caitlyn Yordle Snap Trap for headshot proc"}
+      ]
+    }
+  ]
+}
 
 STRICT RULES:
 — "tierInfo": tier + WR in a compact badge ("S-tier · 53% WR"). Use training knowledge if no live data. Never empty string — always provide a tier estimate.
@@ -393,8 +396,10 @@ Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR")
     try {
       const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
+      // Accept a raw array or a { suggestions: [...] } wrapper (JSON-mode safe)
+      const items: any[] = Array.isArray(parsed) ? parsed : (parsed.suggestions ?? parsed.picks ?? []);
 
-      return parsed.map((item: any) => {
+      return items.map((item: any) => {
         // Sanitize ID to DDragon format: "Miss Fortune" → "MissFortune", "K'Sante" → "KSante"
         const champId = String(item.championId ?? '').trim().replace(/['\s`]/g, '');
         return {
@@ -477,8 +482,8 @@ Example good tips (for Renekton vs Nasus):
   {"phase":"trade","tip":"All-in at level 2 with W stun before Nasus stacks — you win hard"}
   {"phase":"danger","tip":"Respect his Wither (W) at level 6 — it halves your attack speed"}
 
-Respond ONLY with a valid JSON array, no markdown.
-[{"phase":"early","tip":"..."},...]`;
+Respond ONLY with a valid JSON object, no markdown:
+{"tips":[{"phase":"early","tip":"..."}, ...]}`;
   }
 
   private parseGameplayResponse(res: AiChatResponse): GameplayTip[] {
@@ -486,7 +491,8 @@ Respond ONLY with a valid JSON array, no markdown.
     try {
       const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
-      return (parsed as any[])
+      const items: any[] = Array.isArray(parsed) ? parsed : (parsed.tips ?? []);
+      return items
         .filter((item) => item?.phase && item?.tip)
         .slice(0, 8)
         .map((item) => ({
@@ -609,8 +615,8 @@ RULES:
 — NO generic advice ("play safe", "ward", "farm")
 — Reference ability names (Q/W/E/R or ability name)
 
-Respond ONLY with valid JSON — no markdown:
-[{"type":"mechanic","tip":"..."},{"type":"synergy","tip":"..."}]`;
+Respond ONLY with a valid JSON object — no markdown:
+{"tips":[{"type":"mechanic","tip":"..."},{"type":"synergy","tip":"..."}]}`;
   }
 
   private parseChampionTipsResponse(res: AiChatResponse): ChampionTip[] {
@@ -618,7 +624,8 @@ Respond ONLY with valid JSON — no markdown:
     try {
       const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);
-      return (parsed as any[])
+      const items: any[] = Array.isArray(parsed) ? parsed : (parsed.tips ?? []);
+      return items
         .filter((item) => item?.type && item?.tip && VALID.has(item.type))
         .slice(0, 6)
         .map((item) => ({

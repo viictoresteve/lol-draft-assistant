@@ -51,6 +51,11 @@ export class AbilityQuizService {
     this.loadChampionsThen(() => this.loadRound());
   }
 
+  /** Retry loading the current round after an error */
+  retryRound() {
+    this.loadChampionsThen(() => this.loadRound());
+  }
+
   private loadChampionsThen(cb: () => void) {
     if (this.allChampions.length > 0) { cb(); return; }
     this.loading.set(true);
@@ -60,7 +65,7 @@ export class AbilityQuizService {
     });
   }
 
-  private loadRound() {
+  private loadRound(triesLeft = 5) {
     this.error.set(null);
     this.outcome.set(null);
     this.current.set(null);
@@ -72,17 +77,25 @@ export class AbilityQuizService {
 
     this.detailService.getAbilities(champ.id).subscribe({
       next: (abilities) => {
-        this.loading.set(false);
         const valid = abilities.filter((a) => !!a.iconUrl && !a.iconUrl.endsWith('undefined'));
-        if (valid.length === 0) { this.loadRound(); return; } // skip broken champ data
+        if (valid.length === 0) {
+          // Broken/empty champion data — try a different champion (bounded)
+          if (triesLeft > 0) { this.loadRound(triesLeft - 1); }
+          else { this.loading.set(false); this.error.set('Could not load an ability. Retry.'); }
+          return;
+        }
+        this.loading.set(false);
         const ability = valid[Math.floor(Math.random() * valid.length)];
         this.current.set({
           champion: { id: champ.id, name: champ.name, image: champ.image },
           ability,
-          allAbilities: abilities,
+          allAbilities: valid,
         });
       },
-      error: () => { this.loading.set(false); this.loadRound(); },
+      error: () => {
+        if (triesLeft > 0) { this.loadRound(triesLeft - 1); }
+        else { this.loading.set(false); this.error.set('Could not load an ability. Retry.'); }
+      },
     });
   }
 
