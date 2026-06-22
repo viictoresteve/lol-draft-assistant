@@ -52,26 +52,19 @@
 .champ-art {
   position: absolute;
   inset: 0;
+  /*
+   * Square 120×120 face-centered icon, upscaled to fill the slot.
+   * "cover + center 30%" keeps the face framed for every champion.
+   * image-rendering smooths the modest upscale.
+   */
   background-size: cover;
-  /*
-   * Loading art is 308×560 (tall portrait).
-   * At cover-fit in a wide-shallow slot the image is scaled to fill
-   * the full width, making it ~700px tall in a 110px window.
-   * 18% offset drops the crop window down into the face/chest area.
-   */
-  /*
-   * Loading art 308×560. At cover-fit in a wide slot the image scales
-   * to ~690px tall. 8% offset keeps the crop window on the face/head
-   * area (original y ≈ 40–200px). 12% on hover pans slightly down to
-   * reveal the chest/shoulders as a subtle interaction cue.
-   */
-  background-position: center 8%;
+  background-position: center 30%;
   background-repeat: no-repeat;
-  transition: background-position 0.4s ease;
+  transition: transform 0.4s ease;
 }
 
 .slot:hover .champ-art {
-  background-position: center 12%;
+  transform: scale(1.06);
 }
 
 /* ── Gradient: dark band at the bottom for the name ── */

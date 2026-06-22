@@ -6,6 +6,7 @@ import { DraftPick, DraftRole } from '@features/draft/models/draft.interface';
 import { Champion } from '@shared/models/champion.interface';
 import { ChampionsService } from '@core/services/champions.service';
 import { TierListService } from '@core/services/tier-list.service';
+import { PatchService } from '@core/services/patch.service';
 import * as DraftActions from '@store/draft/draft.actions';
 
 @Component({
@@ -20,6 +21,7 @@ export class PickSlot {
   private store = inject(Store);
   private champService = inject(ChampionsService);
   private tierListService = inject(TierListService);
+  private patchService = inject(PatchService);
 
   pick = input.required<DraftPick>();
   team = input.required<'ally' | 'enemy'>();
@@ -92,8 +94,13 @@ export class PickSlot {
     this.closeSearch();
   }
 
-  getLoadingArt(championId: string): string {
-    return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${championId}_0.jpg`;
+  /**
+   * Square champion portrait (120×120, face-centered by Riot). Reliable across
+   * all champions — unlike the loading splash, whose face position varies and
+   * gets cropped inconsistently in a fixed-size slot.
+   */
+  champArt(championId: string): string {
+    return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
   }
 
   removePick(event: Event) {

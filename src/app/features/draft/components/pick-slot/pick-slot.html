@@ -55,7 +55,7 @@
   @if (!isSearchOpen() && pick().champion; as champion) {
     <div
       class="champ-art"
-      [style.background-image]="'url(' + getLoadingArt(champion.id) + ')'"
+      [style.background-image]="'url(' + champArt(champion.id) + ')'"
     ></div>
     <div class="slot-overlay">
       <div class="slot-footer">
