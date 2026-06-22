@@ -2,6 +2,8 @@
 
 > AI-powered League of Legends champion-select assistant, grounded in **real match data**. Get live draft suggestions, counter analysis, and gameplay coaching — plus two training mini-games. Built with Angular 21 + NgRx and a small Node/Express data proxy.
 
+**🔗 [Live demo](https://lol-draft-assistant-sable.vercel.app)** &nbsp;·&nbsp; bring your own free [Gemini](https://aistudio.google.com/apikey) or [Groq](https://console.groq.com/keys) key (set it in ⚙ Settings)
+
 ![CI](https://github.com/viictoresteve/lol-draft-assistant/actions/workflows/ci.yml/badge.svg)
 &nbsp;Angular 21 · NgRx · TypeScript (strict) · PWA · i18n (EN/ES)
 
