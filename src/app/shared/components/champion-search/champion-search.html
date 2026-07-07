@@ -13,13 +13,14 @@
     [value]="searchTerm()"
     (input)="onInput($event)"
     [attr.aria-label]="ls.T().searchPlaceholder"
-    autofocus
+   
   />
   <div class="cs-results" role="listbox" [attr.aria-label]="ls.T().champions">
     @for (champion of filteredChampions(); track champion.id) {
       <button
         class="cs-option"
         role="option"
+        aria-selected="false"
         [attr.aria-label]="champion.name"
         (click)="select(champion)"
       >

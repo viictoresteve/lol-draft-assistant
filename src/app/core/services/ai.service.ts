@@ -647,7 +647,7 @@ Respond ONLY with a valid JSON object — no markdown:
   }
 
   private parseChampionTipsResponse(res: AiChatResponse): ChampionTip[] {
-    const VALID: Set<ChampionTipType> = new Set(['mechanic', 'synergy', 'combo', 'counterplay']);
+    const VALID = new Set<ChampionTipType>(['mechanic', 'synergy', 'combo', 'counterplay']);
     try {
       const cleaned = this.content(res);
       const parsed = JSON.parse(cleaned);

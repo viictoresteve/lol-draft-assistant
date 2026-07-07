@@ -53,7 +53,7 @@
         <!-- Ability icon -->
         <div class="ability-stage">
           <div class="ability-icon-wrap" [class.revealed]="!!outcome()">
-            <img class="ability-icon" [src]="r.ability.iconUrl" [alt]="outcome() ? r.ability.name : 'Mystery ability'" imgFallback />
+            <img class="ability-icon" [src]="r.ability.iconUrl" [alt]="outcome() ? r.ability.name : 'Mystery ability'" appImgFallback />
           </div>
           @if (!outcome()) {
             <p class="stage-prompt">{{ ls.T().quizPrompt }}</p>
@@ -73,7 +73,7 @@
               <span class="guess-label">{{ ls.T().quizChampion }}</span>
               @if (guessedChampion(); as gc) {
                 <div class="picked-champ">
-                  <img [src]="gc.image" [alt]="gc.name" width="34" height="34" imgFallback />
+                  <img [src]="gc.image" [alt]="gc.name" width="34" height="34" appImgFallback />
                   <span>{{ gc.name }}</span>
                   <button class="clear-x" (click)="clearChampion()">✕</button>
                 </div>
@@ -84,7 +84,7 @@
                   <div class="champ-results">
                     @for (c of searchResults(); track c.id) {
                       <button class="champ-opt" (click)="pickChampion(c)" [title]="c.name">
-                        <img [src]="c.image" [alt]="c.name" width="32" height="32" loading="lazy" imgFallback />
+                        <img [src]="c.image" [alt]="c.name" width="32" height="32" loading="lazy" appImgFallback />
                         <span>{{ c.name }}</span>
                       </button>
                     }
@@ -117,7 +117,7 @@
             </div>
 
             <div class="reveal-answer">
-              <img class="ra-champ" [src]="o.champion.image" [alt]="o.champion.name" imgFallback />
+              <img class="ra-champ" [src]="o.champion.image" [alt]="o.champion.name" appImgFallback />
               <div class="ra-text">
                 <span class="ra-name">
                   <b [style.color]="SLOT_META[o.ability.slot].color">{{ SLOT_META[o.ability.slot].label }}</b>
@@ -140,7 +140,7 @@
             <div class="all-abilities">
               @for (ab of r.allAbilities; track ab.slot) {
                 <div class="mini-ability" [class.is-answer]="ab.slot === o.ability.slot" [style.--sc]="SLOT_META[ab.slot].color">
-                  <img [src]="ab.iconUrl" [alt]="ab.name" imgFallback />
+                  <img [src]="ab.iconUrl" [alt]="ab.name" appImgFallback />
                   <span class="mini-slot">{{ ab.slot }}</span>
                 </div>
               }
@@ -167,7 +167,7 @@
       <div class="summary-rounds">
         @for (o of outcomes(); track $index) {
           <div class="summary-round">
-            <img class="sr-icon" [src]="o.ability.iconUrl" [alt]="o.ability.name" imgFallback />
+            <img class="sr-icon" [src]="o.ability.iconUrl" [alt]="o.ability.name" appImgFallback />
             <span class="sr-name">{{ o.champion.name }} <b [style.color]="SLOT_META[o.ability.slot].color">{{ o.ability.slot }}</b></span>
             <span class="sr-checks">
               <span [class.ok]="o.championCorrect" [class.no]="!o.championCorrect">{{ o.championCorrect ? '✓' : '✗' }}</span>

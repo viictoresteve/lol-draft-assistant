@@ -9,10 +9,10 @@ const TRANSPARENT_PX =
  * transparent pixel and tags the element so CSS can style the gap if desired.
  * Reused across draft slots, puzzle/quiz icons and the champion pool.
  *
- *   <img [src]="champIcon(id)" imgFallback />
+ *   <img [src]="champIcon(id)" appImgFallback />
  */
 @Directive({
-  selector: 'img[imgFallback]',
+  selector: 'img[appImgFallback]',
   standalone: true,
 })
 export class ImgFallbackDirective {

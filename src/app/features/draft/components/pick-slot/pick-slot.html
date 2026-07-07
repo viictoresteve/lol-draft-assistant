@@ -24,12 +24,12 @@
         (input)="searchTerm.set($any($event.target).value)"
         (keydown.escape)="closeSearch()"
         autocomplete="off"
-        autofocus
+       
       />
       @if (filteredChampions().length > 0) {
         <div class="is-grid" role="listbox">
           @for (c of filteredChampions(); track c.id) {
-            <button class="is-btn" role="option" (click)="onChampionSelected(c)" [title]="c.name">
+            <button class="is-btn" role="option" aria-selected="false" (click)="onChampionSelected(c)" [title]="c.name">
               <img [src]="c.image" [alt]="c.name" width="32" height="32" loading="lazy" decoding="async" />
             </button>
           }
@@ -40,7 +40,7 @@
         <p class="is-hint">Top picks for {{ pick().role }}</p>
         <div class="is-grid" role="listbox">
           @for (c of defaultChampions(); track c.id) {
-            <button class="is-btn" role="option" (click)="onChampionSelected(c)" [title]="c.name">
+            <button class="is-btn" role="option" aria-selected="false" (click)="onChampionSelected(c)" [title]="c.name">
               <img [src]="c.image" [alt]="c.name" width="32" height="32" loading="lazy" decoding="async" />
             </button>
           }
