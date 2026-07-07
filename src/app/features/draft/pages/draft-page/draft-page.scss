@@ -251,17 +251,33 @@
   @media (max-width: 600px) { width: calc(100vw - 24px); right: -12px; }
 }
 
+.template-title {
+  font-size: 0.625rem;
+  color: #5a6a7a;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  margin: 0;
+  padding: 10px 12px 6px;
+}
+
 .template-mode {
   display: flex;
-  gap: 0;
+  gap: 6px;
+  padding: 0 10px 8px;
   border-bottom: 1px solid #1e2a38;
 }
 
 .mode-btn {
   flex: 1;
-  background: transparent;
-  border: none;
-  color: #3a4a5a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #0d141c;
+  border: 1px solid #1e2a38;
+  border-radius: 5px;
+  color: #5a6a7a;
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 8px 0;
@@ -270,21 +286,42 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
 
-  &.active {
+  .mode-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  &.mode-ally  .mode-dot { background: #0ac8b9; }
+  &.mode-enemy .mode-dot { background: #e84057; }
+
+  // Colour-matched active state so it's unmistakable WHICH team gets filled
+  &.mode-ally.active {
     color: #0ac8b9;
-    background: rgba(10, 200, 185, 0.06);
-    border-bottom: 2px solid #0ac8b9;
+    border-color: #0a6a5a;
+    background: rgba(10, 200, 185, 0.1);
+    box-shadow: 0 0 10px rgba(10, 200, 185, 0.2);
+  }
+  &.mode-enemy.active {
+    color: #ff8a8a;
+    border-color: #7a2030;
+    background: rgba(232, 64, 87, 0.1);
+    box-shadow: 0 0 10px rgba(232, 64, 87, 0.2);
   }
 
-  &:not(.active):hover { color: #6a8a9a; }
+  &:not(.active):hover { filter: brightness(1.3); }
 }
 
 .template-hint {
   font-size: 0.625rem;
-  color: #2a3a4a;
+  color: #4a5a6a;
   margin: 0;
-  padding: 6px 12px 4px;
+  padding: 8px 12px 4px;
   font-style: italic;
+  transition: color 0.12s;
+
+  &.hint-ally  { color: #4a9a8a; }
+  &.hint-enemy { color: #b06a70; }
 }
 
 .template-list {
@@ -408,7 +445,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   border-radius: 0;
+}
+
+/* Which draft side this team is on — ties the Blue/Red selector to the columns */
+.team-side-tag {
+  font-size: 0.4375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 2px;
+
+  &.side-blue { color: #90ccff; background: rgba(100, 170, 240, 0.14); }
+  &.side-red  { color: #ff9a9a; background: rgba(232, 64, 87, 0.14); }
 }
 
 .team-header-ally {

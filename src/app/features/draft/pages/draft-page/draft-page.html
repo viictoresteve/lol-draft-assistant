@@ -96,25 +96,26 @@
         <div class="template-backdrop" (click)="showTemplateMenu.set(false)"></div>
         <div class="template-dropdown">
 
-          <!-- Mode toggle -->
+          <!-- Mode toggle: which team a preset fills (colour-matched to the board) -->
+          <p class="template-title">{{ ls.T().templateLoadInto }}</p>
           <div class="template-mode">
             <button
-              class="mode-btn"
-              [class.active]="templateMode() === 'enemy'"
-              (click)="templateMode.set('enemy')"
-            >Fill Enemy</button>
-            <button
-              class="mode-btn"
+              class="mode-btn mode-ally"
               [class.active]="templateMode() === 'ally'"
               (click)="templateMode.set('ally')"
-            >Fill Ally</button>
+            ><span class="mode-dot"></span>{{ ls.T().templateFillAlly }}</button>
+            <button
+              class="mode-btn mode-enemy"
+              [class.active]="templateMode() === 'enemy'"
+              (click)="templateMode.set('enemy')"
+            ><span class="mode-dot"></span>{{ ls.T().templateFillEnemy }}</button>
           </div>
 
-          <p class="template-hint">
-            @if (templateMode() === 'enemy') {
-              Click a preset to populate the enemy team — great for testing counters
+          <p class="template-hint" [class.hint-ally]="templateMode() === 'ally'" [class.hint-enemy]="templateMode() === 'enemy'">
+            @if (templateMode() === 'ally') {
+              {{ ls.T().templateHintAlly }}
             } @else {
-              Fills ally team (skips your selected role)
+              {{ ls.T().templateHintEnemy }}
             }
           </p>
 
@@ -159,6 +160,7 @@
     <section class="team ally-team" [attr.aria-label]="ls.T().ally">
       <div class="team-header team-header-ally">
         <span class="team-label">{{ ls.T().ally }}</span>
+        <span class="team-side-tag" [class]="'side-' + side()">{{ side() === 'blue' ? ls.T().blueSide : ls.T().redSide }}</span>
       </div>
       <app-ban-panel team="ally" [bans]="allyBans()" [excludeIds]="takenIds()" />
       <div class="picks">
@@ -175,6 +177,7 @@
     <section class="team enemy-team" [attr.aria-label]="ls.T().enemy">
       <div class="team-header team-header-enemy">
         <span class="team-label">{{ ls.T().enemy }}</span>
+        <span class="team-side-tag" [class]="'side-' + (side() === 'blue' ? 'red' : 'blue')">{{ side() === 'blue' ? ls.T().redSide : ls.T().blueSide }}</span>
       </div>
       <app-ban-panel team="enemy" [bans]="enemyBans()" [excludeIds]="takenIds()" />
       <div class="picks">

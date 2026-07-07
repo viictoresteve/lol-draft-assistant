@@ -13,6 +13,13 @@ export const TRANSLATIONS = {
     resetAll: 'Clear draft',
     ally: 'Ally',
     enemy: 'Enemy',
+    mySide: 'My side',
+    // Preset / template menu
+    templateLoadInto: 'Load a preset comp into:',
+    templateFillAlly: 'My team',
+    templateFillEnemy: 'Enemy team',
+    templateHintAlly: 'Fills your team (leaves your selected role open to pick).',
+    templateHintEnemy: 'Fills the enemy team — great for testing counters.',
     // Suggestions panel
     aiSuggestions: 'AI Suggestions',
     analyzingDraft: 'Analyzing draft...',
@@ -148,10 +155,17 @@ export const TRANSLATIONS = {
     side: 'Lado:',
     blueSide: 'Azul',
     redSide: 'Rojo',
+    mySide: 'Tu lado',
     reset: 'Reiniciar',
     resetAll: 'Limpiar draft',
     ally: 'Aliado',
     enemy: 'Rival',
+    // Preset / template menu
+    templateLoadInto: 'Cargar comp preset en:',
+    templateFillAlly: 'Mi equipo',
+    templateFillEnemy: 'Equipo rival',
+    templateHintAlly: 'Rellena tu equipo (deja libre tu rol para que elijas).',
+    templateHintEnemy: 'Rellena el equipo rival — ideal para probar counters.',
     // Suggestions panel
     aiSuggestions: 'Sugerencias IA',
     analyzingDraft: 'Analizando draft...',

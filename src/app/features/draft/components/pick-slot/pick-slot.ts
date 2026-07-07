@@ -94,12 +94,25 @@ export class PickSlot {
     this.closeSearch();
   }
 
+  /** Fast id → numeric-key lookup, built once from the full champion roster. */
+  private keyById = computed(() => {
+    const m = new Map<string, string>();
+    for (const c of this.allChampions()) if (c.key) m.set(c.id, c.key);
+    return m;
+  });
+
   /**
-   * Square champion portrait (120×120, face-centered by Riot). Reliable across
-   * all champions — unlike the loading splash, whose face position varies and
-   * gets cropped inconsistently in a fixed-size slot.
+   * High-res, face-centered champion art for the slot.
+   * Community Dragon's "centered" splash (~1920px) is sharp at any slot size and
+   * always framed on the champion — fixing both the pixelation of the 120px
+   * square icon and the inconsistent cropping of the loading splash.
+   * Falls back to the square icon if the numeric key isn't known yet.
    */
   champArt(championId: string): string {
+    const key = this.pick().champion?.key ?? this.keyById().get(championId);
+    if (key) {
+      return `https://cdn.communitydragon.org/latest/champion/${key}/splash-art/centered`;
+    }
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
   }
 

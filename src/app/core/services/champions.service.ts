@@ -7,6 +7,7 @@ import { PatchService } from '@core/services/patch.service';
 /** Shape of the entries in DDragon's champion.json */
 interface DDragonChampion {
   id: string;
+  key: string;
   name: string;
   title: string;
   tags: ChampionTag[];
@@ -40,6 +41,7 @@ export class ChampionsService {
   private mapToChampions(data: Record<string, DDragonChampion>, version: string): Champion[] {
     return Object.values(data).map((champ) => ({
       id: champ.id,
+      key: champ.key,
       name: champ.name,
       title: champ.title,
       image: `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champ.id}.png`,
