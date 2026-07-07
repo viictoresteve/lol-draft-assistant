@@ -7,6 +7,8 @@
 ![CI](https://github.com/viictoresteve/lol-draft-assistant/actions/workflows/ci.yml/badge.svg)
 &nbsp;Angular 21 · NgRx · TypeScript (strict) · PWA · i18n (EN/ES)
 
+![Draft board with AI suggestions](docs/screenshots/draft.png)
+
 ---
 
 ## What it does
@@ -24,6 +26,17 @@ During (or before) champion select, you fill in both teams' picks and bans and p
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | **Draft Puzzle** | A 5-round match: two drafts with one missing pick — find the best champion. Progressive hints, real-data-validated answer keys. | AI (Gemini/Groq) + OP.GG validation |
 | **Ability Quiz** | See an ability icon, name the champion and slot (P/Q/W/E/R). 10 rounds.                                                         | 100% Data Dragon (no AI)            |
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/puzzle.png" alt="Draft Puzzle mini-game"></td>
+    <td width="50%"><img src="docs/screenshots/quiz.png" alt="Ability Quiz mini-game"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Draft Puzzle</b></td>
+    <td align="center"><b>Ability Quiz</b></td>
+  </tr>
+</table>
 
 ---
 
