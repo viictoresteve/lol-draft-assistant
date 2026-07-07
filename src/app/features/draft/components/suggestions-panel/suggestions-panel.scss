@@ -21,7 +21,7 @@
 .title {
   color: #c89b3c;
   margin: 0;
-  font-size: 10px;
+  font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   font-weight: 700;
@@ -29,7 +29,7 @@
 }
 
 .guide-title {
-  font-size: 12px;
+  font-size: 0.75rem;
   text-transform: none;
   letter-spacing: 0;
   color: #c8aa6e;
@@ -40,7 +40,7 @@
 }
 
 .vs-sep {
-  font-size: 9px;
+  font-size: 0.5625rem;
   color: #3a4a5a;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -54,7 +54,7 @@
 }
 
 .vbtn {
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   letter-spacing: 0.3px;
   padding: 3px 8px;
@@ -85,7 +85,7 @@
   gap: 10px;
   padding: 32px 16px;
   color: #555;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .spinner {
@@ -102,7 +102,7 @@
 /* ── Empty states ── */
 .empty {
   color: #3a3a3a;
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-align: center;
   padding: 28px 14px;
   margin: 0;
@@ -154,7 +154,7 @@
 }
 
 .rank {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   color: #2a3a4a;
   width: 12px;
@@ -191,7 +191,7 @@
 }
 
 .champ-name {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: #c8aa6e;
   white-space: nowrap;
@@ -202,13 +202,13 @@
 }
 
 .pool-star {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #0ac8b9;
   flex-shrink: 0;
 }
 
 .tier-badge {
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 600;
   color: #a08030;
   background: rgba(200, 155, 60, 0.07);
@@ -232,7 +232,7 @@
 }
 
 .add-hint {
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   color: #0ac8b9;
   letter-spacing: 0.5px;
@@ -258,7 +258,7 @@
   display: flex;
   align-items: baseline;
   gap: 5px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   line-height: 1.35;
   padding: 4px 8px;
   border-radius: 3px;
@@ -278,14 +278,14 @@
   &.no-cons {
     color: #2a3a2a;
     font-style: italic;
-    font-size: 10px;
+    font-size: 0.625rem;
     border-left: 2px solid #1a2a1a;
     background: transparent;
   }
 }
 
 .tag-icon {
-  font-size: 9px;
+  font-size: 0.5625rem;
   flex-shrink: 0;
   opacity: 0.7;
 }
@@ -301,7 +301,7 @@
 }
 
 .pairs-label {
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -335,7 +335,7 @@
   }
 
   > span {
-    font-size: 9px;
+    font-size: 0.5625rem;
     color: #3a5a6a;
     white-space: nowrap;
     font-weight: 600;
@@ -372,7 +372,7 @@
   }
 
   strong.synergy-champ {
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     color: #0ac8b9;
     text-transform: uppercase;
@@ -380,7 +380,7 @@
   }
 
   span {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: #7a9aaa;
     line-height: 1.45;
     white-space: normal;
@@ -401,7 +401,7 @@
   background: #1a2030;
   border: 1px solid #1e2a38;
   color: #c8aa6e;
-  font-size: 16px;
+  font-size: 1.0rem;
   width: 26px;
   height: 26px;
   display: flex;
@@ -417,7 +417,7 @@
 }
 
 .page-label {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: #555;
   letter-spacing: 0.5px;
   min-width: 36px;
@@ -494,13 +494,13 @@
 }
 
 .error-msg {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #7a3a3a;
   margin: 0;
 }
 
 .error-hint {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #4a3a3a;
   margin: -4px 0 0;
   text-align: center;
@@ -510,7 +510,7 @@
   background: transparent;
   border: 1px solid #5a2a2a;
   color: #cc6060;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   padding: 5px 16px;
   border-radius: 4px;
@@ -536,7 +536,7 @@
 
 .phase-badge {
   flex-shrink: 0;
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -564,7 +564,7 @@
 }
 
 .phase-tip {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: #8a9aaa;
   line-height: 1.4;
 }
@@ -586,7 +586,7 @@
   background: transparent;
   border: 1px solid #1e2a38;
   color: #4a7a5a;
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 3px;
@@ -630,7 +630,7 @@
 }
 
 .champ-tip-type {
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -640,7 +640,7 @@
 }
 
 .champ-tip-text {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: #8a9aaa;
   line-height: 1.4;
 }
@@ -651,7 +651,7 @@
   background: transparent;
   border: 1px solid #1e2a38;
   color: #4a6a5a;
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 3px;
@@ -681,7 +681,7 @@
   border: 1px solid #1e2a38;
   border-radius: 4px;
   color: #c8aa6e;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 7px 10px;
   outline: none;
 
@@ -714,18 +714,18 @@
 
   img { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
-  span:nth-child(2) { font-size: 11px; flex: 1; }
+  span:nth-child(2) { font-size: 0.6875rem; flex: 1; }
 }
 
 .pool-add-icon {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #0ac8b9;
   margin-left: auto;
 }
 
 .pool-current-label {
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -752,7 +752,7 @@
 
   img { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
-  span { font-size: 11px; color: #7a9aaa; flex: 1; }
+  span { font-size: 0.6875rem; color: #7a9aaa; flex: 1; }
 }
 
 .pool-remove-btn {
@@ -760,7 +760,7 @@
   border: none;
   color: #4a2a2a;
   cursor: pointer;
-  font-size: 9px;
+  font-size: 0.5625rem;
   padding: 2px 4px;
   border-radius: 2px;
   flex-shrink: 0;
@@ -770,7 +770,7 @@
 }
 
 .pool-empty-hint {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #2a3a4a;
   text-align: center;
   margin: 8px 0;

@@ -91,7 +91,7 @@
 }
 
 .champion-name {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: #e8d5a3;
   line-height: 1;
@@ -105,7 +105,7 @@
 
 /* ── Role pill ── */
 .role-pill {
-  font-size: 7px;
+  font-size: 0.4375rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -132,7 +132,7 @@
 }
 
 .add-icon {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: #1c2535;
   transition: color 0.15s;
   line-height: 1;
@@ -150,7 +150,7 @@
   color: #e84057;
   cursor: pointer;
   border-radius: 2px;
-  font-size: 9px;
+  font-size: 0.5625rem;
   padding: 2px 5px;
   opacity: 0;
   transition: opacity 0.12s;
@@ -180,7 +180,7 @@
   border: none;
   border-bottom: 1px solid #1e2a38;
   color: #c8aa6e;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 8px 10px;
   outline: none;
   flex-shrink: 0;
@@ -223,7 +223,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #1e2a38;
   margin: 0;
   font-style: italic;
@@ -233,5 +233,5 @@
 
 @media (max-width: 600px) {
   .slot { height: 120px; }
-  .champion-name { font-size: 10px; }
+  .champion-name { font-size: 0.625rem; }
 }

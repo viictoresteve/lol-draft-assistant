@@ -11,7 +11,7 @@
   border-radius: 6px;
   color: #c8aa6e;
   padding: 10px 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   outline: none;
   box-sizing: border-box;
 
@@ -64,11 +64,11 @@
 
 .name {
   flex: 1;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .badge {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: bold;
   color: #0ac8b9;
   flex-shrink: 0;
@@ -76,7 +76,7 @@
 
 .no-results {
   color: #555;
-  font-size: 13px;
+  font-size: 0.8125rem;
   text-align: center;
   padding: 16px;
   margin: 0;

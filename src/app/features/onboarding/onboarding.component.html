@@ -1,36 +1,52 @@
 @if (show()) {
-  <div class="onboarding-overlay" (click)="dismiss()" aria-modal="true" role="dialog" aria-label="Welcome">
+  <div class="onboarding-overlay" (click)="dismiss()" aria-modal="true" role="dialog" [attr.aria-label]="ls.T().onbTitle">
     <div class="onboarding-card" (click)="$event.stopPropagation()">
-      <h2 class="onboarding-title">Welcome to LoL Draft Assistant</h2>
-      <p class="onboarding-subtitle">Get started in 3 steps</p>
+
+      <div class="onboarding-lang" role="group" aria-label="Language">
+        <button
+          class="lang-btn"
+          [class.active]="ls.lang() === 'en'"
+          (click)="setLang('en')"
+          aria-label="English"
+        >EN</button>
+        <button
+          class="lang-btn"
+          [class.active]="ls.lang() === 'es'"
+          (click)="setLang('es')"
+          aria-label="Español"
+        >ES</button>
+      </div>
+
+      <h2 class="onboarding-title">{{ ls.T().onbTitle }}</h2>
+      <p class="onboarding-subtitle">{{ ls.T().onbSubtitle }}</p>
 
       <div class="onboarding-steps">
         <div class="onboarding-step">
           <span class="step-icon">🎯</span>
           <div class="step-content">
-            <strong class="step-heading">1. Select your role</strong>
-            <p class="step-desc">Click TOP / JG / MID / ADC / SUP to tell the AI what you're playing.</p>
+            <strong class="step-heading">{{ ls.T().onbStep1Title }}</strong>
+            <p class="step-desc">{{ ls.T().onbStep1Desc }}</p>
           </div>
         </div>
 
         <div class="onboarding-step">
           <span class="step-icon">⚔️</span>
           <div class="step-content">
-            <strong class="step-heading">2. Fill the draft</strong>
-            <p class="step-desc">Click any pick slot to add ally and enemy champions. Add bans too.</p>
+            <strong class="step-heading">{{ ls.T().onbStep2Title }}</strong>
+            <p class="step-desc">{{ ls.T().onbStep2Desc }}</p>
           </div>
         </div>
 
         <div class="onboarding-step">
           <span class="step-icon">🤖</span>
           <div class="step-content">
-            <strong class="step-heading">3. AI does the rest</strong>
-            <p class="step-desc">Get champion suggestions, gameplay tips, and comp analysis powered by AI.</p>
+            <strong class="step-heading">{{ ls.T().onbStep3Title }}</strong>
+            <p class="step-desc">{{ ls.T().onbStep3Desc }}</p>
           </div>
         </div>
       </div>
 
-      <button class="onboarding-btn" (click)="dismiss()">Got it →</button>
+      <button class="onboarding-btn" (click)="dismiss()">{{ ls.T().onbGotIt }}</button>
     </div>
   </div>
 }

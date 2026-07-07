@@ -4,6 +4,21 @@
 
 html {
   scroll-behavior: smooth;
+
+  /*
+   * Responsive typographic root. Every font-size in the app is in `rem`, so
+   * they all scale from this single value. On laptops it stays 100% (16px) —
+   * identical to the original px design. On large desktop monitors (1080p and
+   * up, 2K, 4K) the whole type scale grows proportionally, so text isn't tiny.
+   */
+  font-size: 100%; /* 16px */
+
+  @media (min-width: 1600px) {
+    font-size: 106.25%; /* 17px — 1080p / 2K desktops */
+  }
+  @media (min-width: 2560px) {
+    font-size: 112.5%; /* 18px — 2K+ / 4K */
+  }
 }
 
 html, body {

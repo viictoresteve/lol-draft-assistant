@@ -19,13 +19,13 @@
 
 .settings-title {
   margin: 0 0 6px;
-  font-size: 16px;
+  font-size: 1.0rem;
   font-weight: 700;
   color: #c89b3c;
 }
 
 .settings-subtitle {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: #3a4a5a;
   margin: 0 0 24px;
   line-height: 1.5;
@@ -59,7 +59,7 @@
   height: 18px;
   background: #1a2535;
   border-radius: 50%;
-  font-size: 9px;
+  font-size: 0.5625rem;
   font-weight: 700;
   color: #4a6a7a;
   display: flex;
@@ -69,13 +69,13 @@
 }
 
 .provider-name {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #c8aa6e;
 }
 
 .active-badge {
-  font-size: 8px;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -87,7 +87,7 @@
 }
 
 .get-key-link {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #785a28;
   text-decoration: none;
   font-weight: 600;
@@ -107,7 +107,7 @@
   border-radius: 4px;
   color: #c8aa6e;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   outline: none;
   font-family: monospace;
 
@@ -122,7 +122,7 @@
   color: #555;
   cursor: pointer;
   padding: 0 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   flex-shrink: 0;
 
   &:hover { border-color: #785a28; }
@@ -133,7 +133,7 @@
   background: #0a2a20;
   border: 1px solid #0a6a50;
   color: #0ac8b9;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   padding: 11px;
   border-radius: 5px;
@@ -155,5 +155,5 @@
   border-top: 1px solid #1a2535;
 }
 
-.patch-label { font-size: 10px; color: #3a4a5a; text-transform: uppercase; letter-spacing: 0.5px; }
-.patch-value { font-size: 11px; color: #c89b3c; font-weight: 700; }
+.patch-label { font-size: 0.625rem; color: #3a4a5a; text-transform: uppercase; letter-spacing: 0.5px; }
+.patch-value { font-size: 0.6875rem; color: #c89b3c; font-weight: 700; }

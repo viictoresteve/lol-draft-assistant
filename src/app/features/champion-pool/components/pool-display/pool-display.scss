@@ -24,7 +24,7 @@
 }
 
 .role-label {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -37,7 +37,7 @@
 }
 
 .role-count {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: #444;
   background: #1e2328;
   border-radius: 10px;
@@ -79,7 +79,7 @@
 }
 
 .name {
-  font-size: 9px;
+  font-size: 0.5625rem;
   color: #c8aa6e;
   text-align: center;
   line-height: 1.2;
@@ -95,7 +95,7 @@
   color: #e84057;
   cursor: pointer;
   border-radius: 3px;
-  font-size: 8px;
+  font-size: 0.5rem;
   padding: 2px 3px;
   opacity: 0;
   transition: opacity 0.12s;
@@ -104,7 +104,7 @@
 
 .empty-role {
   color: #333;
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-align: center;
   padding: 8px 0 2px;
   margin: 0;
