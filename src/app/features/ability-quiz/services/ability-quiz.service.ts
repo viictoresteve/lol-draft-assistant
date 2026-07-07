@@ -85,7 +85,10 @@ export class AbilityQuizService {
           return;
         }
         this.loading.set(false);
-        const ability = valid[Math.floor(Math.random() * valid.length)];
+        const chosen = valid[Math.floor(Math.random() * valid.length)];
+        // Hide the champion's own name from the shown description — otherwise it
+        // gives the answer away and ruins the round.
+        const ability = { ...chosen, description: this.hideChampionName(chosen.description, champ.name) };
         this.current.set({
           champion: { id: champ.id, name: champ.name, image: champ.image },
           ability,
@@ -97,6 +100,29 @@ export class AbilityQuizService {
         else { this.loading.set(false); this.error.set('Could not load an ability. Retry.'); }
       },
     });
+  }
+
+  /**
+   * Redact the champion's name from an ability description so it doesn't spoil
+   * the answer. Handles compound names ("Miss Fortune"), apostrophe/space-free
+   * forms ("Kai'Sa" → "Kaisa"), the first name token, and the possessive form.
+   */
+  private hideChampionName(text: string, championName: string): string {
+    if (!text) return text;
+    const REDACT = '❓❓❓';
+    const variants = new Set<string>();
+    variants.add(championName);
+    variants.add(championName.replace(/['’.\s]/g, '')); // KaiSa, ChoGath
+    const first = championName.split(/[\s'’]/)[0];       // "Miss" of "Miss Fortune"
+    if (first.length >= 4) variants.add(first);
+
+    let out = text;
+    // Longest first, so "Miss Fortune" is matched before "Miss"
+    for (const v of [...variants].sort((a, b) => b.length - a.length)) {
+      const esc = v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      out = out.replace(new RegExp(`\\b${esc}(['’]s)?\\b`, 'gi'), (_m, poss) => (poss ? `${REDACT}'s` : REDACT));
+    }
+    return out;
   }
 
   private pickRandomChampion(): Champion | null {
