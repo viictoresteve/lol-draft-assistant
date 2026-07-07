@@ -7,17 +7,17 @@ html {
 
   /*
    * Responsive typographic root. Every font-size in the app is in `rem`, so
-   * they all scale from this single value. On laptops it stays 100% (16px) —
-   * identical to the original px design. On large desktop monitors (1080p and
-   * up, 2K, 4K) the whole type scale grows proportionally, so text isn't tiny.
+   * they all scale proportionally from this single value (no risk of breaking
+   * the visual hierarchy). Bumped above the browser default so body/label text
+   * reads comfortably, then grows further on large desktop monitors.
    */
-  font-size: 100%; /* 16px */
+  font-size: 106.25%; /* 17px base — comfortable on laptops */
 
   @media (min-width: 1600px) {
-    font-size: 106.25%; /* 17px — 1080p / 2K desktops */
+    font-size: 112.5%; /* 18px — 1080p / 2K desktops */
   }
   @media (min-width: 2560px) {
-    font-size: 112.5%; /* 18px — 2K+ / 4K */
+    font-size: 125%; /* 20px — 2K+ / 4K */
   }
 }
 

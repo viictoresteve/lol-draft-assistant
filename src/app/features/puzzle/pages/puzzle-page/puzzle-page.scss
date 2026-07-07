@@ -39,7 +39,7 @@
   &.streak-hot { border-color: #c84030; box-shadow: 0 0 10px rgba(232,64,87,0.25); }
 }
 .score-val { font-size: 1.0rem; font-weight: 700; color: #c8aa6e; }
-.score-lbl { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.6px; color: #3a4a5a; }
+.score-lbl { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.6px; color: #3a4a5a; }
 
 /* ── Start screen ── */
 .pz-start {
@@ -59,7 +59,7 @@
   justify-content: center;
 }
 .opt-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.opt-label { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.8px; color: #3a4a5a; }
+.opt-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.8px; color: #3a4a5a; }
 
 .hints-toggle {
   font-size: 0.6875rem;
@@ -191,7 +191,7 @@
   p { margin: 0; font-size: 0.8125rem; color: #a0b0c0; line-height: 1.5; }
 }
 .scenario-diff {
-  font-size: 0.5rem;
+  font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -204,7 +204,7 @@
   &.diff-hard   { color: #e06060; background: rgba(106,42,42,0.3); }
 }
 .scenario-data {
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: #0ac8b9;
   background: rgba(10,200,185,0.08);
@@ -217,7 +217,7 @@
 }
 
 .key-wr {
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
   font-weight: 800;
   color: #0ac8b9;
   background: rgba(10,200,185,0.1);
@@ -258,7 +258,7 @@
 .my-bar .team-name { color: #0ac8b9; }
 .opp-bar .team-name { color: #e84057; }
 .team-side {
-  font-size: 0.5rem; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 2px;
+  font-size: 0.625rem; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 2px;
   &.side-blue { color: #6aaaff; background: rgba(100,170,255,0.12); }
   &.side-red  { color: #ff8888; background: rgba(255,100,100,0.12); }
 }
@@ -291,7 +291,7 @@
   &.empty-row { opacity: 0.3; }
 }
 .pick-role {
-  font-size: 0.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   color: #3a4a5a; width: 30px; flex-shrink: 0;
 }
 .pick-icon {
@@ -335,7 +335,7 @@
   gap: 6px;
   margin-top: 14px;
 }
-.attempts-label { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.6px; color: #3a4a5a; }
+.attempts-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.6px; color: #3a4a5a; }
 .attempt-chip {
   display: flex;
   align-items: center;
@@ -346,7 +346,7 @@
   padding: 2px 8px 2px 2px;
   img { border-radius: 50%; object-fit: cover; }
   span { font-size: 0.625rem; color: #a0b0c0; }
-  .chip-grade { font-size: 0.5rem; font-weight: 700; text-transform: uppercase; }
+  .chip-grade { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; }
 }
 
 /* ── Wrong-guess feedback ── */
@@ -383,7 +383,7 @@
   }
 }
 .hint-num {
-  font-size: 0.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+  font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
   color: #785a28; flex-shrink: 0; min-width: 38px;
 }
 .hint-text { font-size: 0.75rem; color: #b0c0d0; line-height: 1.45; }
@@ -473,7 +473,7 @@
   margin-bottom: 16px;
 }
 .key-title {
-  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
   color: #3a4a5a; margin: 0 0 8px;
 }
 .key-row {
@@ -490,8 +490,8 @@
 }
 .key-icon { width: 26px; height: 26px; border-radius: 4px; object-fit: cover; }
 .key-name { font-size: 0.6875rem; font-weight: 700; color: #c8aa6e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.key-grade { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
-.key-reason { font-size: 0.625rem; color: #6a7a8a; line-height: 1.35; }
+.key-grade { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+.key-reason { font-size: 0.75rem; color: #8a9aa8; line-height: 1.4; }
 
 .next-btn { width: 100%; }
 
