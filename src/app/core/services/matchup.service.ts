@@ -24,10 +24,10 @@ export class MatchupService {
   private cache = new Map<string, Observable<ChampionMatchupData | null>>();
 
   getCounters(championName: string, role: DraftRole): Observable<ChampionMatchupData | null> {
-    if (!environment.proxyUrl) return of(null); // proxy not running
     const key = `${championName}:${role}`;
     if (this.cache.has(key)) return this.cache.get(key)!;
 
+    // Local dev → Express proxy; production → same-origin `/api` Vercel function.
     const req$ = this.http
       .get<ChampionMatchupData>(
         `${environment.proxyUrl}/api/counters/${encodeURIComponent(championName)}?position=${role}`,

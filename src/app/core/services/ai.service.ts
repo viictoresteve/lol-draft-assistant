@@ -157,7 +157,7 @@ export class AiService {
 
     const roleSection = request.userRole
       ? `Player role: ${request.userRole.toUpperCase()}.
-All 5 suggestions MUST play ${request.userRole.toUpperCase()}.
+All 6 suggestions MUST play ${request.userRole.toUpperCase()}.
 Lane matchup: player's ${request.userRole.toUpperCase()} vs enemy ${request.userRole.toUpperCase()} only.`
       : `Role not specified. Suggest champions for open slots.`;
 

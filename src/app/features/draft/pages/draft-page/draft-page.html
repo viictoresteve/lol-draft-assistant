@@ -61,7 +61,7 @@
             <button class="history-item" (click)="restoreFromHistory(entry)">
               <div class="history-icons">
                 @for (url of historyPickIcons(entry); track url) {
-                  <img [src]="url" width="24" height="24" loading="lazy" />
+                  <img [src]="url" alt="" width="24" height="24" loading="lazy" />
                 }
               </div>
               <div class="history-meta">

@@ -48,6 +48,7 @@
     "@angular/build": "^21.0.1",
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
+    "@vercel/node": "^5.8.22",
     "concurrently": "^9.1.0",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
