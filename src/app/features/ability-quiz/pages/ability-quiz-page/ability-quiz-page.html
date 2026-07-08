@@ -178,6 +178,8 @@
         }
       </div>
 
+      <app-leaderboard game="abilities" [score]="score()" />
+
       <div class="summary-actions">
         <button class="start-btn" (click)="start()">{{ ls.T().quizPlayAgain }}</button>
         <button class="menu-btn" (click)="quit()">{{ ls.T().quizMenu }}</button>

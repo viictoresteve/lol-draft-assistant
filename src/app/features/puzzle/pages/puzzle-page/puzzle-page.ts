@@ -8,6 +8,7 @@ import { LanguageService } from '@core/services/language.service';
 import { Champion } from '@shared/models/champion.interface';
 import { DraftRole } from '@features/draft/models/draft.interface';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
+import { LeaderboardComponent } from '@shared/components/leaderboard/leaderboard.component';
 import {
   PuzzlePick, PuzzleChampion, PuzzleDifficulty, GRADE_META, PickGrade,
 } from '@features/puzzle/models/puzzle.interface';
@@ -17,7 +18,7 @@ const ROLES: DraftRole[] = ['top', 'jungle', 'mid', 'adc', 'support'];
 @Component({
   selector: 'app-puzzle-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ImgFallbackDirective],
+  imports: [RouterLink, ImgFallbackDirective, LeaderboardComponent],
   templateUrl: './puzzle-page.html',
   styleUrl: './puzzle-page.scss',
 })

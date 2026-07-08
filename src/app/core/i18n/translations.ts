@@ -154,6 +154,15 @@ export const TRANSLATIONS = {
     soundReplay: 'Replay',
     soundHint: 'Hear their voice line',
     soundHintNote: '(costs half the points)',
+    // Leaderboard
+    lbTitle: '🏆 Global leaderboard',
+    lbYourName: 'Your name',
+    lbNamePlaceholder: 'Enter a name…',
+    lbSubmit: 'Submit score',
+    lbSubmitted: 'Score submitted ✓',
+    lbEmpty: 'No scores yet — be the first!',
+    lbUnavailable: 'Leaderboard unavailable right now.',
+    lbYou: 'you',
     // AI instruction
     aiLang: 'Respond in English.',
   },
@@ -312,6 +321,15 @@ export const TRANSLATIONS = {
     soundReplay: 'Repetir',
     soundHint: 'Oír su frase',
     soundHintNote: '(cuesta la mitad de puntos)',
+    // Leaderboard
+    lbTitle: '🏆 Clasificación global',
+    lbYourName: 'Tu nombre',
+    lbNamePlaceholder: 'Escribe un nombre…',
+    lbSubmit: 'Enviar puntuación',
+    lbSubmitted: 'Puntuación enviada ✓',
+    lbEmpty: 'Aún no hay puntuaciones — ¡sé el primero!',
+    lbUnavailable: 'Clasificación no disponible ahora mismo.',
+    lbYou: 'tú',
     // AI instruction
     aiLang: 'Responde íntegramente en español.',
   },

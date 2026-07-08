@@ -311,6 +311,8 @@
         }
       </div>
 
+      <app-leaderboard game="puzzle" [score]="matchScore()" />
+
       <div class="summary-actions">
         <button class="start-btn" (click)="startMatch()">{{ ls.T().puzzlePlayAgain }}</button>
         <button class="menu-btn" (click)="quit()">{{ ls.T().puzzleMenu }}</button>

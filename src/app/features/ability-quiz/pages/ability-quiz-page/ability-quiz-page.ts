@@ -3,6 +3,7 @@ import { AbilityQuizService } from '@features/ability-quiz/services/ability-quiz
 import { LanguageService } from '@core/services/language.service';
 import { Champion } from '@shared/models/champion.interface';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
+import { LeaderboardComponent } from '@shared/components/leaderboard/leaderboard.component';
 import {
   AbilitySlot, ABILITY_SLOTS, SLOT_META,
 } from '@features/ability-quiz/models/ability-quiz.interface';
@@ -10,7 +11,7 @@ import {
 @Component({
   selector: 'app-ability-quiz-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImgFallbackDirective],
+  imports: [ImgFallbackDirective, LeaderboardComponent],
   templateUrl: './ability-quiz-page.html',
   styleUrl: './ability-quiz-page.scss',
 })

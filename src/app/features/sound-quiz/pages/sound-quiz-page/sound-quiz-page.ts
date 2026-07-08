@@ -3,11 +3,12 @@ import { SoundQuizService } from '@features/sound-quiz/services/sound-quiz.servi
 import { LanguageService } from '@core/services/language.service';
 import { Champion } from '@shared/models/champion.interface';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
+import { LeaderboardComponent } from '@shared/components/leaderboard/leaderboard.component';
 
 @Component({
   selector: 'app-sound-quiz-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImgFallbackDirective],
+  imports: [ImgFallbackDirective, LeaderboardComponent],
   templateUrl: './sound-quiz-page.html',
   styleUrl: './sound-quiz-page.scss',
 })

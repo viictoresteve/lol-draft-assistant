@@ -1,0 +1,43 @@
+<div class="lb">
+  <div class="lb-head">{{ ls.T().lbTitle }}</div>
+
+  <!-- Submit row (only when the player actually scored and hasn't submitted) -->
+  @if (score() > 0 && !submitted()) {
+    <div class="lb-submit">
+      <input
+        class="lb-name"
+        type="text"
+        maxlength="20"
+        [placeholder]="ls.T().lbNamePlaceholder"
+        [value]="name()"
+        (input)="name.set($any($event.target).value)"
+        (keyup.enter)="submit()"
+      />
+      <button class="lb-btn" [disabled]="!name().trim() || submitting()" (click)="submit()">
+        {{ submitting() ? '…' : ls.T().lbSubmit }}
+      </button>
+    </div>
+  }
+  @if (submitted() && !failed()) {
+    <div class="lb-done">{{ ls.T().lbSubmitted }}</div>
+  }
+
+  <!-- Board -->
+  @if (loading()) {
+    <div class="lb-spinner"></div>
+  } @else if (failed() || (entries().length === 0 && submitted())) {
+    <p class="lb-note">{{ ls.T().lbUnavailable }}</p>
+  } @else if (entries().length === 0) {
+    <p class="lb-note">{{ ls.T().lbEmpty }}</p>
+  } @else {
+    <ol class="lb-list">
+      @for (e of entries(); track $index) {
+        <li class="lb-row" [class.me]="isMe(e, $index)">
+          <span class="lb-rank" [class.top1]="$index === 0" [class.top2]="$index === 1" [class.top3]="$index === 2">{{ $index + 1 }}</span>
+          <span class="lb-player">{{ e.name }}@if (isMe(e, $index)) { <span class="lb-you">({{ ls.T().lbYou }})</span> }</span>
+          <span class="lb-score">{{ e.score }}</span>
+        </li>
+      }
+    </ol>
+  }
+</div>
