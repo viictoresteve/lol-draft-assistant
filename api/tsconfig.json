@@ -1,0 +1,13 @@
+{
+  "//": "Scopes the Vercel serverless functions to CommonJS output. The root tsconfig uses module:\"preserve\" (ESM) for the Angular app, which Vercel's Node runtime can't load as CJS — causing 'Unexpected token export'. This overrides just the /api functions.",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}
