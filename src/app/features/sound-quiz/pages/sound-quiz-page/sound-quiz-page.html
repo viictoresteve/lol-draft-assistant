@@ -24,6 +24,7 @@
         <span>{{ ls.T().quizPerfects }}: <b>{{ stats().perfectRounds }}</b></span>
         <span>{{ ls.T().quizGames }}: <b>{{ stats().gamesPlayed }}</b></span>
       </div>
+      <app-leaderboard game="sounds" [score]="0" />
     </div>
   }
 
