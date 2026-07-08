@@ -45,6 +45,21 @@ In production `proxyUrl` is empty, so calls go same-origin to `/api`.
 > ([`api/`](api/)) share the same OP.GG MCP logic — Express for local dev,
 > serverless for production.
 
+## Global leaderboard (optional)
+
+The mini-games show a global leaderboard backed by **Upstash Redis** (free).
+Without it the games work fine — the board just shows "unavailable".
+
+1. In the Vercel dashboard → **Storage → Create Database → Upstash for Redis**
+   (or [upstash.com](https://upstash.com) → create a Redis DB → *Connect to Vercel*).
+2. Connect it to this project. Vercel injects the env vars automatically:
+   `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+3. Redeploy (`vercel --prod`). The `/api/leaderboard/:game` function picks them
+   up and scores start persisting globally.
+
+Scores are stored one sorted set per game (`lb:puzzle`, `lb:abilities`,
+`lb:sounds`), keeping each player's best and the top 20.
+
 ## Notes
 
 - **Data source down?** The app still works; the AI falls back to its own meta
