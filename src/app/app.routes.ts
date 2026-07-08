@@ -31,6 +31,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'sounds',
+    loadComponent: () =>
+      import('./features/sound-quiz/pages/sound-quiz-page/sound-quiz-page').then(
+        (m) => m.SoundQuizPage,
+      ),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./features/settings/pages/settings-page/settings-page').then(

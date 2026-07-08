@@ -1,0 +1,142 @@
+<div class="sq-page">
+  <!-- Header -->
+  <div class="sq-header">
+    <div>
+      <h1 class="sq-title">🔊 {{ ls.T().soundTitle }}</h1>
+      <div class="sq-subtitle">{{ ls.T().soundSubtitle }}</div>
+    </div>
+    @if (phase() === 'playing') {
+      <div class="sq-scorebar">
+        <div class="score-item"><span class="score-val">{{ roundLabel() }}</span><span class="score-lbl">{{ ls.T().quizRound }}</span></div>
+        <div class="score-item"><span class="score-val">{{ score() }}</span><span class="score-lbl">{{ ls.T().quizScore }}</span></div>
+        <button class="quit-btn" (click)="quit()" [attr.aria-label]="ls.T().quizMenu">✕</button>
+      </div>
+    }
+  </div>
+
+  <!-- Start screen -->
+  @if (phase() === 'idle') {
+    <div class="sq-start">
+      <p class="start-desc">{{ ls.T().soundIntro }}</p>
+      <button class="start-btn" (click)="start()">{{ ls.T().soundStart }}</button>
+      <div class="lifetime-stats">
+        <span>{{ ls.T().quizBest }}: <b>{{ stats().bestScore }}</b></span>
+        <span>{{ ls.T().quizPerfects }}: <b>{{ stats().perfectRounds }}</b></span>
+        <span>{{ ls.T().quizGames }}: <b>{{ stats().gamesPlayed }}</b></span>
+      </div>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (phase() === 'playing' && loading()) {
+    <div class="sq-loading"><div class="sq-spinner"></div><span>{{ ls.T().soundLoading }}</span></div>
+  }
+
+  <!-- Error -->
+  @if (phase() === 'playing' && error() && !loading()) {
+    <div class="sq-error">
+      <p class="start-error">{{ error() }}</p>
+      <button class="start-btn" (click)="retryRound()">{{ ls.T().quizRetry }}</button>
+    </div>
+  }
+
+  <!-- Board -->
+  @if (phase() === 'playing' && current() && !loading()) {
+    <div class="sq-board">
+      <!-- Audio stage -->
+      <div class="sound-stage">
+        <button class="play-disc" [class.playing]="isPlaying()" (click)="play()" [attr.aria-label]="ls.T().soundPlay">
+          <span class="disc-icon">{{ isPlaying() ? '❚❚' : '▶' }}</span>
+          <span class="disc-rings"></span>
+        </button>
+        <p class="stage-prompt">{{ ls.T().soundPrompt }}</p>
+        <button class="replay-btn" (click)="play()">↻ {{ ls.T().soundReplay }}</button>
+
+        @if (!outcome()) {
+          <button class="hint-btn" (click)="useHint()" [disabled]="hintUsed()">
+            @if (hintUsed()) { 🎙 … } @else { 🎙 {{ ls.T().soundHint }} <b>{{ ls.T().soundHintNote }}</b> }
+          </button>
+        }
+      </div>
+
+      <!-- Guess -->
+      @if (!outcome()) {
+        <div class="sq-guess">
+          @if (guessedChampion(); as g) {
+            <div class="picked-champ">
+              <img [src]="g.image" [alt]="g.name" width="28" height="28" appImgFallback />
+              <span>{{ g.name }}</span>
+              <button class="clear-x" (click)="clearChampion()" aria-label="Clear">✕</button>
+            </div>
+          } @else {
+            <input
+              class="champ-search"
+              type="text"
+              [placeholder]="ls.T().quizSearchChamp"
+              [value]="searchTerm()"
+              (input)="searchTerm.set($any($event.target).value)"
+              autofocus
+            />
+            @if (searchResults().length > 0) {
+              <div class="champ-results">
+                @for (c of searchResults(); track c.id) {
+                  <button class="champ-opt" (click)="pickChampion(c)">
+                    <img [src]="c.image" [alt]="c.name" width="34" height="34" appImgFallback />
+                    <span>{{ c.name }}</span>
+                  </button>
+                }
+              </div>
+            }
+          }
+
+          <button class="submit-btn" [disabled]="!canSubmit()" (click)="submit()">{{ ls.T().quizSubmit }}</button>
+        </div>
+      }
+
+      <!-- Reveal -->
+      @if (outcome(); as o) {
+        <div class="sq-reveal">
+          <div class="reveal-badge" [class.ok]="o.correct" [class.no]="!o.correct">
+            {{ o.correct ? '✓ +' + o.points : '✗' }}
+          </div>
+          <div class="reveal-answer">
+            <img [src]="o.champion.image" [alt]="o.champion.name" width="56" height="56" class="ra-champ" appImgFallback />
+            <div class="ra-text">
+              <span class="ra-name">{{ o.champion.name }}</span>
+              @if (!o.correct && o.guessedChampionId) {
+                <span class="ra-wrong">{{ ls.T().quizChampion }}: {{ o.guessedChampionId }} ✗</span>
+              }
+              @if (o.hintUsed) { <span class="ra-hint">🎙 hint used</span> }
+            </div>
+          </div>
+          <button class="next-btn" (click)="next()">
+            {{ isLastRound() ? ls.T().quizSeeResults : ls.T().quizNext }} ▸
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Summary -->
+  @if (phase() === 'summary') {
+    <div class="sq-summary">
+      <div class="summary-rank" [style.color]="matchRank().color" [style.border-color]="matchRank().color">{{ matchRank().label }}</div>
+      <h2 class="summary-title">{{ ls.T().quizComplete }}</h2>
+      <div class="summary-score"><span class="big-score">{{ score() }}</span><span class="max-score">/ {{ maxScore() }}</span></div>
+      <div class="summary-rounds">
+        @for (o of outcomes(); track $index) {
+          <div class="summary-round">
+            <img [src]="o.champion.image" [alt]="o.champion.name" class="sr-icon" width="30" height="30" appImgFallback />
+            <span class="sr-name">{{ o.champion.name }}</span>
+            <span class="sr-check" [class.ok]="o.correct" [class.no]="!o.correct">{{ o.correct ? '✓' : '✗' }}</span>
+            <span class="sr-pts">+{{ o.points }}</span>
+          </div>
+        }
+      </div>
+      <div class="summary-actions">
+        <button class="start-btn" (click)="start()">{{ ls.T().quizPlayAgain }}</button>
+        <button class="menu-btn" (click)="quit()">{{ ls.T().quizMenu }}</button>
+      </div>
+    </div>
+  }
+</div>
