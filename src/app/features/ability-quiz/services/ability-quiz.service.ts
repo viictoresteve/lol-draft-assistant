@@ -9,6 +9,9 @@ import {
 
 const STATS_KEY = 'lol-ability-quiz-stats';
 
+/** Visual challenge level — higher difficulties obscure the ability icon. */
+export type QuizDifficulty = 'easy' | 'medium' | 'hard';
+
 interface QuizStats {
   bestScore: number;
   gamesPlayed: number;
@@ -32,6 +35,7 @@ export class AbilityQuizService {
   current      = signal<AbilityRound | null>(null);
   outcome      = signal<RoundOutcome | null>(null);
   hintUsed     = signal(false);
+  difficulty   = signal<QuizDifficulty>('easy');
 
   stats        = signal<QuizStats>(this.loadStats());
 
@@ -49,6 +53,11 @@ export class AbilityQuizService {
     this.outcomes.set([]);
     this.usedChampionIds.clear();
     this.loadChampionsThen(() => this.loadRound());
+  }
+
+  /** Choose the challenge level (only allowed from the start menu). */
+  setDifficulty(d: QuizDifficulty) {
+    if (this.phase() === 'idle') this.difficulty.set(d);
   }
 
   /** Retry loading the current round after an error */

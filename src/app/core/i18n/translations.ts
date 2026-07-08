@@ -142,6 +142,9 @@ export const TRANSLATIONS = {
     quizBest: 'Best score',
     quizPerfects: 'Perfect rounds',
     quizGames: 'Games',
+    quizDiffEasyHint: 'Icon shown in full colour.',
+    quizDiffMediumHint: 'Icon shown in black & white.',
+    quizDiffHardHint: 'Icon in black & white and rotated 180°.',
     // Sound Quiz
     navSound: 'Sounds',
     soundTitle: 'Sound Quiz',
@@ -309,6 +312,9 @@ export const TRANSLATIONS = {
     quizBest: 'Mejor puntuación',
     quizPerfects: 'Rondas perfectas',
     quizGames: 'Partidas',
+    quizDiffEasyHint: 'Icono a todo color.',
+    quizDiffMediumHint: 'Icono en blanco y negro.',
+    quizDiffHardHint: 'Icono en blanco y negro y girado 180°.',
     // Sound Quiz
     navSound: 'Sonidos',
     soundTitle: 'Quiz de Sonidos',

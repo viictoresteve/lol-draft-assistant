@@ -19,6 +19,28 @@
   @if (phase() === 'idle') {
     <div class="qz-start">
       <p class="start-desc">{{ ls.T().quizIntro }}</p>
+
+      <div class="qz-difficulty">
+        <span class="diff-label">{{ ls.T().puzzleDifficulty }}</span>
+        <div class="diff-picker">
+          @for (d of difficulties; track d) {
+            <button
+              class="diff-btn"
+              [class]="'diff-' + d + (difficulty() === d ? ' active' : '')"
+              (click)="setDifficulty(d)"
+              [attr.aria-pressed]="difficulty() === d"
+            >{{ tt('puzzleDiff_' + d) }}</button>
+          }
+        </div>
+        <span class="diff-hint">
+          @switch (difficulty()) {
+            @case ('medium') { {{ ls.T().quizDiffMediumHint }} }
+            @case ('hard')   { {{ ls.T().quizDiffHardHint }} }
+            @default         { {{ ls.T().quizDiffEasyHint }} }
+          }
+        </span>
+      </div>
+
       <button class="start-btn" (click)="start()" [disabled]="loading()">
         {{ loading() ? '…' : ls.T().quizStart }}
       </button>
@@ -53,7 +75,13 @@
         <!-- Ability icon -->
         <div class="ability-stage">
           <div class="ability-icon-wrap" [class.revealed]="!!outcome()">
-            <img class="ability-icon" [src]="r.ability.iconUrl" [alt]="outcome() ? r.ability.name : 'Mystery ability'" appImgFallback />
+            <img
+              class="ability-icon"
+              [class.fx-medium]="!outcome() && difficulty() === 'medium'"
+              [class.fx-hard]="!outcome() && difficulty() === 'hard'"
+              [src]="r.ability.iconUrl"
+              [alt]="outcome() ? r.ability.name : 'Mystery ability'"
+              appImgFallback />
           </div>
           @if (!outcome()) {
             <p class="stage-prompt">{{ ls.T().quizPrompt }}</p>

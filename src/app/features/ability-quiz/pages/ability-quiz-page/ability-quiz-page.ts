@@ -4,6 +4,7 @@ import { LanguageService } from '@core/services/language.service';
 import { Champion } from '@shared/models/champion.interface';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
 import { LeaderboardComponent } from '@shared/components/leaderboard/leaderboard.component';
+import { QuizDifficulty } from '@features/ability-quiz/services/ability-quiz.service';
 import {
   AbilitySlot, ABILITY_SLOTS, SLOT_META,
 } from '@features/ability-quiz/models/ability-quiz.interface';
@@ -21,6 +22,13 @@ export class AbilityQuizPage {
 
   readonly slots = ABILITY_SLOTS;
   readonly SLOT_META = SLOT_META;
+  readonly difficulties: QuizDifficulty[] = ['easy', 'medium', 'hard'];
+  difficulty = this.quiz.difficulty;
+  setDifficulty(d: QuizDifficulty) { this.quiz.setDifficulty(d); }
+
+  tt(key: string): string {
+    return (this.ls.T() as Record<string, string>)[key] ?? key;
+  }
 
   // state passthrough
   phase       = this.quiz.phase;
