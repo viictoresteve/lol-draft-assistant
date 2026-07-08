@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { SettingsService } from '@core/services/settings.service';
+import { ToastService } from '@core/services/toast.service';
+import { LanguageService } from '@core/services/language.service';
 
 export interface AIProvider {
   id: string;
@@ -56,6 +58,8 @@ export interface ProviderStatus {
 export class AIHttpService {
   private http = inject(HttpClient);
   private settings = inject(SettingsService);
+  private toast = inject(ToastService);
+  private ls = inject(LanguageService);
 
   readonly status = signal<ProviderStatus>({ active: null, fallbackUsed: false, error: null });
 
@@ -71,6 +75,7 @@ export class AIHttpService {
   private tryProvider<T>(body: object, providers: AIProvider[], idx: number): Observable<T> {
     if (idx >= providers.length) {
       this.status.set({ active: null, fallbackUsed: idx > 0, error: 'All providers exhausted' });
+      this.toast.warning(this.ls.T().aiRateLimited);
       return throwError(() => ({ status: 503, message: 'All AI providers exhausted or rate-limited' }));
     }
 
@@ -107,6 +112,9 @@ export class AIHttpService {
             fallbackUsed: idx > 0,
             error: err?.status === 429 ? 'RATE_LIMITED' : err?.status === 401 ? 'NO_API_KEY' : err?.message,
           });
+          // Surface it — but 401/NO_API_KEY is already covered by the top banner.
+          if (err?.status === 429) this.toast.warning(this.ls.T().aiRateLimited);
+          else if (err?.status !== 401) this.toast.error(this.ls.T().aiFailed);
           throw err;
         }),
       );

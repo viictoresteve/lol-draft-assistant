@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, OnInit, inject, input, signal } from '@angular/core';
 import { LanguageService } from '@core/services/language.service';
 import { LeaderboardService, LeaderboardGame, LeaderboardEntry } from '@core/services/leaderboard.service';
+import { ToastService } from '@core/services/toast.service';
 
 /**
  * Self-contained global leaderboard for a mini-game summary: shows the top
@@ -16,6 +17,7 @@ import { LeaderboardService, LeaderboardGame, LeaderboardEntry } from '@core/ser
 })
 export class LeaderboardComponent implements OnInit {
   private lb = inject(LeaderboardService);
+  private toast = inject(ToastService);
   ls = inject(LanguageService);
 
   game = input.required<LeaderboardGame>();
@@ -47,6 +49,11 @@ export class LeaderboardComponent implements OnInit {
       this.submitting.set(false);
       this.submitted.set(true);
       this.failed.set(entries.length === 0);
+      if (entries.length === 0) {
+        this.toast.error(this.ls.T().lbUnavailable);
+      } else {
+        this.toast.success(this.ls.T().lbSubmitted);
+      }
     });
   }
 

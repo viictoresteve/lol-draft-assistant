@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { OnboardingComponent } from '@features/onboarding/onboarding.component';
+import { ToastComponent } from '@shared/components/toast/toast.component';
 import { Store } from '@ngrx/store';
 import { LanguageService } from '@core/services/language.service';
 import { Lang } from '@core/i18n/translations';
@@ -12,7 +13,7 @@ import * as DraftActions from '@store/draft/draft.actions';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, OnboardingComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, OnboardingComponent, ToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.component.scss',
 })
