@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { SwUpdate } from '@angular/service-worker';
 import { OnboardingComponent } from '@features/onboarding/onboarding.component';
 import { Store } from '@ngrx/store';
 import { LanguageService } from '@core/services/language.service';
@@ -17,6 +18,7 @@ import * as DraftActions from '@store/draft/draft.actions';
 })
 export class App implements OnInit {
   private store = inject(Store);
+  private swUpdate = inject(SwUpdate);
   ls = inject(LanguageService);
   patchService = inject(PatchService);
   settingsService = inject(SettingsService);
@@ -28,6 +30,24 @@ export class App implements OnInit {
   ngOnInit() {
     this.store.dispatch(PoolActions.loadPool());
     this.store.dispatch(DraftActions.loadDraft());
+    this.watchForUpdates();
+  }
+
+  /**
+   * Auto-update the PWA: when a new deploy is detected, activate it and reload.
+   * Without this the service worker can serve a stale build, tempting users to
+   * "clear site data" to force an update — which also wipes their saved API
+   * keys from localStorage. Auto-updating removes that footgun entirely.
+   */
+  private watchForUpdates() {
+    if (!this.swUpdate.isEnabled) return;
+    this.swUpdate.versionUpdates.subscribe((evt) => {
+      if (evt.type === 'VERSION_READY') {
+        this.swUpdate.activateUpdate().then(() => document.location.reload());
+      }
+    });
+    // Poll so long-lived tabs also pick up new deploys.
+    setInterval(() => { void this.swUpdate.checkForUpdate().catch(() => undefined); }, 60_000);
   }
 
   setLang(lang: Lang) {
