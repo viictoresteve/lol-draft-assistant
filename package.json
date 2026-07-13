@@ -62,17 +62,17 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^21.0.1",
-    "@angular/cli": "^21.0.1",
-    "@angular/compiler-cli": "^21.0.0",
+    "@angular/build": "^22.0.6",
+    "@angular/cli": "^22.0.6",
+    "@angular/compiler-cli": "^22.0.6",
     "@eslint/js": "^10.0.1",
-    "@vercel/node": "^5.8.22",
-    "angular-eslint": "21.4.0",
-    "concurrently": "^9.1.0",
-    "eslint": "^10.3.0",
-    "jsdom": "^27.1.0",
-    "typescript": "~5.9.2",
-    "typescript-eslint": "8.59.2",
-    "vitest": "^4.0.8"
+    "@vercel/node": "^5.8.24",
+    "angular-eslint": "22.1.0",
+    "concurrently": "^10.0.3",
+    "eslint": "^10.7.0",
+    "jsdom": "^29.1.1",
+    "typescript": "~7.0.2",
+    "typescript-eslint": "8.64.0",
+    "vitest": "^4.1.10"
   }
 }
