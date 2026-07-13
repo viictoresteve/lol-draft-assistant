@@ -20,9 +20,9 @@ export interface AIProvider {
 export const AI_PROVIDERS: AIProvider[] = [
   {
     id: 'gemini',
-    name: 'Gemini 2.0 Flash',
+    name: 'Gemini 2.5 Flash',
     url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     getKey: (s) => s.geminiApiKey(),
     freeKeyUrl: 'https://aistudio.google.com/apikey',
     jsonMode: true,

@@ -8,6 +8,8 @@ import { LanguageService } from '@core/services/language.service';
 import { TierListService, ChampionTierEntry } from '@core/services/tier-list.service';
 import { MatchupService, ChampionMatchupData } from '@core/services/matchup.service';
 import { PatchService } from '@core/services/patch.service';
+import { ChampionDetailService } from '@core/services/champion-detail.service';
+import { AbilityInfo } from '@features/ability-quiz/models/ability-quiz.interface';
 import {
   DraftPuzzle, PuzzleAnswer, PuzzleDifficulty, PickGrade,
 } from '@features/puzzle/models/puzzle.interface';
@@ -57,6 +59,7 @@ export class AiService {
   private tierListService = inject(TierListService);
   private matchupService  = inject(MatchupService);
   private patchService    = inject(PatchService);
+  private detailService   = inject(ChampionDetailService);
 
   /**
    * In-memory cache of AI responses keyed by the exact prompt, so identical
@@ -140,6 +143,15 @@ export class AiService {
       })
       .join('\n');
 
+    // Factual champion classes (from Riot tags) — anchors the model so it can't
+    // misremember a champion's identity (e.g. treat a mage as an AD bruiser).
+    const classRef = [...request.allyPicks, ...request.enemyPicks]
+      .map((p) => p.champion)
+      .filter((c): c is NonNullable<typeof c> => !!c && Array.isArray(c.tags) && c.tags.length > 0)
+      .map((c) => `${c.name} (${c.tags.join('/')})`)
+      .join(' · ');
+    const classSection = classRef ? `\n=== CHAMPION CLASSES (factual, Riot data) ===\n${classRef}` : '';
+
     const allyBansStr = request.allyBans.length
       ? request.allyBans.map((c) => c.name).join(', ')
       : 'none';
@@ -202,6 +214,7 @@ ${sideSection}
 ${roleTable}
 Ally bans: ${allyBansStr}
 Enemy bans: ${enemyBansStr}${request.allyCompName ? `\nAlly comp: ${request.allyCompName}` : ''}${request.enemyCompName ? `\nEnemy comp: ${request.enemyCompName}` : ''}
+${classSection}
 
 === PLAYER ===
 ${roleSection}
@@ -599,13 +612,20 @@ Rules for macroTips (3-4 items):
   // ── Champion tips (niche mechanics + synergies for the user's picked champ) ─
 
   analyzeChampionTips(request: ChampionTipsRequest): Observable<ChampionTip[]> {
-    const prompt = this.buildChampionTipsPrompt(request);
-    return this.cached(prompt, () => this.aiHttp
-      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 900 })
-      .pipe(map((res) => this.parseChampionTipsResponse(res))));
+    // Ground the tips in the champion's REAL kit (Riot data) so the model
+    // reasons about actual abilities instead of hallucinating from memory.
+    return this.detailService.getAbilities(request.champion.id).pipe(
+      catchError(() => of([] as AbilityInfo[])),
+      switchMap((abilities) => {
+        const prompt = this.buildChampionTipsPrompt(request, abilities);
+        return this.cached(prompt, () => this.aiHttp
+          .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.35, max_tokens: 900 })
+          .pipe(map((res) => this.parseChampionTipsResponse(res))));
+      }),
+    );
   }
 
-  private buildChampionTipsPrompt(request: ChampionTipsRequest): string {
+  private buildChampionTipsPrompt(request: ChampionTipsRequest, abilities: AbilityInfo[]): string {
     const { champion, role, allyPicks, enemyPicks } = request;
     const roles: DraftRole[] = ['top', 'jungle', 'mid', 'adc', 'support'];
 
@@ -615,32 +635,41 @@ Rules for macroTips (3-4 items):
     const allyStr = roles.map((r) => allyMap.get(r) ?? '(open)').filter(n => n !== '(open)').join(', ') || 'none yet';
     const enemyStr = roles.map((r) => enemyMap.get(r) ?? '(open)').filter(n => n !== '(open)').join(', ') || 'none yet';
 
+    // Real kit block — the single biggest accuracy lever for these tips.
+    const kitSection = abilities.length
+      ? `=== ${champion.name.toUpperCase()}'S REAL KIT (from Riot data — use these EXACT abilities, do not invent) ===
+${abilities.map((a) => `  ${a.slot} — ${a.name}: ${a.description.replace(/\s+/g, ' ').trim().slice(0, 160)}`).join('\n')}`
+      : `(Kit data unavailable — rely on your knowledge of ${champion.name}, but never invent abilities.)`;
+
     const langInstruction = this.ls.T().aiLang;
 
-    return `You are an expert League of Legends coach. A player just picked ${champion.name.toUpperCase()} for ${role.toUpperCase()}.
+    return `You are a Challenger-level ${champion.name} main coaching a player who just locked ${champion.name.toUpperCase()} into ${role.toUpperCase()}.
 ${langInstruction}
 
-Their team: ${allyStr}
+${kitSection}
+
+Ally team: ${allyStr}
 Enemy team: ${enemyStr}
 
-Give 5-6 NICHE tips that only mains of ${champion.name} would know. Focus on:
-  "mechanic"    — hidden or non-obvious ability interaction unique to this champion
-  "synergy"     — specific ability combo with a CURRENT ally (name the ally and their ability)
-  "combo"       — key ability sequence or timing for maximum effectiveness
-  "counterplay" — a specific enemy threat in this draft and exactly how to play around it
+Give 5-6 NICHE, high-value tips that separate a one-trick from a first-timer. Every tip must be
+concrete and actionable THIS game. Types:
+  "mechanic"    — a hidden/non-obvious interaction in the kit above (animation cancel, buffered cast, damage breakpoint, resource quirk)
+  "synergy"     — a specific ability combo with a NAMED current ally and their ability (only if it genuinely exists)
+  "combo"       — the optimal ability sequence / cast order for a kill or trade, in ${champion.name}'s real kit
+  "counterplay" — a specific enemy in THIS draft and the exact mechanic to respect (name the enemy + their ability + your answer)
 
-EXAMPLES of good tips:
-  mechanic:    "Cassio E (Twin Fang) costs 0 mana and heals more when hitting a poisoned target"
-  synergy:     "Ashe W slows → Seraphine E auto-roots without channeling — use in lane for free CC chain"
-  combo:       "W → Q → E spam — Q applies Noxious Blast for 3s, E only costs mana when it hits poisoned"
-  counterplay: "Zed R: keep Zhonya's off cooldown, activate when he lands behind you (before autos)"
+GOOD examples:
+  mechanic:    "Riven Q3 knock-up can be animation-cancelled into auto → R for a full burst weave"
+  synergy:     "Yasuo — his knock-up on any enemy lets you flay-combo them mid-air before they land"
+  combo:       "E in → Q3 knock-up → auto → R → Q reset for the execute once they drop below 50%"
+  counterplay: "Malphite R: bait it with a fake all-in, then re-engage on the 100s cooldown window"
 
 RULES:
-— Each tip: 12-20 words, specific to ${champion.name}'s actual kit and abilities
-— Synergy tips MUST name a specific current ally champion and their ability
-— If fewer than 2 allies are picked, skip synergy tips and focus on mechanics/combos
-— NO generic advice ("play safe", "ward", "farm")
-— Reference ability names (Q/W/E/R or ability name)
+— 12-22 words each; reference the ability by its slot letter AND name from the kit above.
+— Synergy tips MUST name a real current ally (from the list) — if fewer than 2 allies exist, give more mechanics/combos instead.
+— counterplay MUST name a real enemy from the list when the enemy team is non-empty.
+— NO filler ("play safe", "ward", "farm well", "poke them"). Every tip teaches something specific.
+— Never invent abilities, items or numbers you're unsure of.
 
 Respond ONLY with a valid JSON object — no markdown:
 {"tips":[{"type":"mechanic","tip":"..."},{"type":"synergy","tip":"..."}]}`;
