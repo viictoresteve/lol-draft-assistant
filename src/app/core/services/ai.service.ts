@@ -89,6 +89,31 @@ export class AiService {
     return obs;
   }
 
+  /**
+   * Shared expert persona + global rules applied to EVERY AI call (draft,
+   * puzzle, tips, comp…) so quality and behaviour are consistent everywhere.
+   * Sent as the `system` message; each feature adds its own `user` prompt.
+   */
+  private systemPrompt(): string {
+    return `You are an elite, Challenger-level League of Legends analyst and coach on patch ${this.patchService.version()}, with deep, current knowledge of champions, abilities, items, runes and the live competitive meta.
+${this.ls.T().aiLang}
+
+GLOBAL RULES — follow on every response:
+1. GROUND TRUTH: any DATA given in the prompt (tier lists, win rates, matchup counters, champion kits, champion classes) overrides your own memory. Trust it over your recollection.
+2. NEVER invent champions, abilities, items or statistics. If you are not sure something is real, stay general instead of fabricating a specific claim.
+3. BE SPECIFIC: name exact champions, abilities (by slot letter + name) and mechanics. Cite the concrete reason. No filler, no hedging, no generic advice ("play safe", "ward", "farm").
+4. Reason from the ACTUAL game state given — the specific picks, bans, role and matchup in THIS prompt, not a generic template.
+5. Output MUST be valid JSON matching the requested schema exactly — no markdown fences, no prose outside the JSON.`;
+  }
+
+  /** Build the chat messages: shared system persona + the feature's user prompt. */
+  private msgs(prompt: string): { role: 'system' | 'user'; content: string }[] {
+    return [
+      { role: 'system', content: this.systemPrompt() },
+      { role: 'user', content: prompt },
+    ];
+  }
+
   private get ddragonBase() {
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}`;
   }
@@ -117,7 +142,7 @@ export class AiService {
           switchMap((matchupData) => {
             const prompt = this.buildPrompt(request, tierData, matchupData);
             return this.cached(prompt, () => this.aiHttp
-              .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.25, max_tokens: 2200 })
+              .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.25, max_tokens: 2200 })
               .pipe(map((res) => this.parseResponse(res))));
           }),
         ),
@@ -478,7 +503,7 @@ Use this data: put tier + WR in the "tierInfo" field (e.g. "A-tier · 51.8% WR")
   analyzeGameplay(request: GameplayRequest): Observable<GameplayTip[]> {
     const prompt = this.buildGameplayPrompt(request);
     return this.cached(prompt, () => this.aiHttp
-      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.4, max_tokens: 1400 })
+      .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.4, max_tokens: 1400 })
       .pipe(map((res) => this.parseGameplayResponse(res))));
   }
 
@@ -550,7 +575,7 @@ Respond ONLY with a valid JSON object, no markdown:
   analyzeCompSummary(request: CompSummaryRequest): Observable<CompSummary> {
     const prompt = this.buildCompSummaryPrompt(request);
     return this.cached(prompt, () => this.aiHttp
-      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 })
+      .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.3, max_tokens: 600 })
       .pipe(map((res) => this.parseCompSummaryResponse(res))));
   }
 
@@ -619,7 +644,7 @@ Rules for macroTips (3-4 items):
       switchMap((abilities) => {
         const prompt = this.buildChampionTipsPrompt(request, abilities);
         return this.cached(prompt, () => this.aiHttp
-          .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.35, max_tokens: 900 })
+          .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.35, max_tokens: 900 })
           .pipe(map((res) => this.parseChampionTipsResponse(res))));
       }),
     );
@@ -698,7 +723,7 @@ Respond ONLY with a valid JSON object — no markdown:
   generatePuzzle(difficulty: PuzzleDifficulty, role: DraftRole): Observable<DraftPuzzle | null> {
     const prompt = this.buildPuzzlePrompt(difficulty, role);
     return this.aiHttp
-      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.9, max_tokens: 2400 })
+      .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.9, max_tokens: 2400 })
       .pipe(
         map((res) => this.parsePuzzleResponse(res, difficulty, role)),
         switchMap((puzzle) => (puzzle ? this.enrichPuzzleWithRealData(puzzle) : of(null))),
@@ -766,7 +791,7 @@ Respond ONLY with a valid JSON object — no markdown:
   gradePick(puzzle: DraftPuzzle, championName: string): Observable<PuzzleAnswer> {
     const prompt = this.buildGradePrompt(puzzle, championName);
     return this.aiHttp
-      .post<AiChatResponse>({ messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 300 })
+      .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.2, max_tokens: 300 })
       .pipe(map((res) => this.parseGradeResponse(res, championName)));
   }
 
