@@ -1,0 +1,29 @@
+# Dependabot keeps dependencies fresh and patched by opening PRs automatically.
+# Docs: https://docs.github.com/code-security/dependabot
+version: 2
+updates:
+  # Frontend (root package.json)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Bundle minor/patch bumps into one PR to cut noise.
+      angular:
+        patterns: ["@angular*", "@ngrx*"]
+      dev-dependencies:
+        dependency-type: development
+
+  # The Node/Express dev proxy
+  - package-ecosystem: npm
+    directory: "/server"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # The GitHub Actions themselves (e.g. actions/checkout versions)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

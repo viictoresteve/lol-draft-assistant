@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel an in-progress run when a newer commit is pushed to the same ref —
+# no point finishing CI on code that's already been superseded.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-proxy:
     name: Proxy tests
