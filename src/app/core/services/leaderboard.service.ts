@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { retryBackoff } from '@core/util/retry-backoff';
 
 export type LeaderboardGame = 'puzzle' | 'abilities' | 'sounds';
 
@@ -42,14 +43,15 @@ export class LeaderboardService {
   getTop(game: LeaderboardGame): Observable<LeaderboardEntry[]> {
     return this.http
       .get<LeaderboardResponse>(`${environment.proxyUrl}/api/leaderboard/${game}`)
-      .pipe(map((r) => r.entries ?? []), catchError(() => of([])));
+      .pipe(retryBackoff(), map((r) => r.entries ?? []), catchError(() => of([])));
   }
 
   submit(game: LeaderboardGame, name: string, score: number, match: MatchRound[] = []): Observable<LeaderboardEntry[]> {
     this.setName(name);
+    // Store ops are idempotent (ZADD GT + HSET), so retrying a blip is safe.
     return this.http
       .post<LeaderboardResponse>(`${environment.proxyUrl}/api/leaderboard/${game}`, { name, score, match })
-      .pipe(map((r) => r.entries ?? []), catchError(() => of([])));
+      .pipe(retryBackoff(2), map((r) => r.entries ?? []), catchError(() => of([])));
   }
 
   /** The stored round-by-round history of a player's best game. */
@@ -58,7 +60,7 @@ export class LeaderboardService {
       .get<{ rounds?: MatchRound[] }>(
         `${environment.proxyUrl}/api/leaderboard/${game}?player=${encodeURIComponent(player)}`,
       )
-      .pipe(map((r) => r.rounds ?? []), catchError(() => of([])));
+      .pipe(retryBackoff(2), map((r) => r.rounds ?? []), catchError(() => of([])));
   }
 
   private readName(): string {

@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, shareReplay } from 'rxjs/operators';
 import { DraftRole } from '@features/draft/models/draft.interface';
 import { environment } from 'src/environments/environment';
+import { retryBackoff } from '@core/util/retry-backoff';
 
 export interface ChampionCounter {
   name: string;
@@ -33,6 +34,7 @@ export class MatchupService {
         `${environment.proxyUrl}/api/counters/${encodeURIComponent(championName)}?position=${role}`,
       )
       .pipe(
+        retryBackoff(),
         catchError(() => of(null)),
         shareReplay(1),
       );

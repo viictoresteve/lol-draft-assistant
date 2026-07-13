@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, map, shareReplay, catchError, throwError } from 'rxjs';
 import { PatchService } from '@core/services/patch.service';
+import { retryBackoff } from '@core/util/retry-backoff';
 import { LanguageService } from '@core/services/language.service';
 import { AbilityInfo, AbilitySlot } from '@features/ability-quiz/models/ability-quiz.interface';
 
@@ -38,7 +39,10 @@ export class ChampionDetailService {
     const req$ = this.http
       .get<DDragonDetailResponse>(`${base}/data/${locale}/champion/${championId}.json`)
       .pipe(
+        retryBackoff(),
         map((res) => this.parse(res, championId, base)),
+        // Don't cache a failure — drop the key so a later call re-fetches.
+        catchError((err) => { this.cache.delete(key); return throwError(() => err); }),
         shareReplay(1),
       );
     this.cache.set(key, req$);

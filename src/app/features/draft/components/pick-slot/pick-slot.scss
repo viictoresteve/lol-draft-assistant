@@ -67,6 +67,15 @@
   transform: scale(1.06);
 }
 
+/* Invisible loader used only to detect a broken splash (still fetches). */
+.art-probe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── Gradient: dark band at the bottom for the name ── */
 .slot-overlay {
   position: absolute;

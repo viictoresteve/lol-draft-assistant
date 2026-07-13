@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { retryBackoff } from '@core/util/retry-backoff';
 
 @Injectable({ providedIn: 'root' })
 export class PatchService {
@@ -12,6 +13,7 @@ export class PatchService {
   constructor() {
     this.http
       .get<string[]>('https://ddragon.leagueoflegends.com/api/versions.json')
+      .pipe(retryBackoff())
       .subscribe({
         next: (versions) => {
           if (versions && versions.length > 0) {

@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, defer, map, shareReplay } from 'rxjs';
+import { Observable, defer, map, shareReplay, catchError, throwError } from 'rxjs';
 import { Champion, ChampionTag } from '@shared/models/champion.interface';
 import { PatchService } from '@core/services/patch.service';
+import { retryBackoff } from '@core/util/retry-backoff';
 
 /** Shape of the entries in DDragon's champion.json */
 interface DDragonChampion {
@@ -23,14 +24,23 @@ export class ChampionsService {
   private http = inject(HttpClient);
   private patchService = inject(PatchService);
 
-  private readonly champions$: Observable<Champion[]> = defer(() => {
-    const version = this.patchService.version();
-    return this.http
-      .get<DDragonChampionList>(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
-      .pipe(map((response) => this.mapToChampions(response.data, version)));
-  }).pipe(shareReplay(1));
+  /** Lazily-built shared stream. Reset to undefined on total failure so the
+   *  next caller re-fetches instead of being stuck with a cached error. */
+  private champions$?: Observable<Champion[]>;
 
   getChampions(): Observable<Champion[]> {
+    if (!this.champions$) {
+      this.champions$ = defer(() => {
+        const version = this.patchService.version();
+        return this.http
+          .get<DDragonChampionList>(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`)
+          .pipe(map((response) => this.mapToChampions(response.data, version)));
+      }).pipe(
+        retryBackoff(),
+        catchError((err) => { this.champions$ = undefined; return throwError(() => err); }),
+        shareReplay(1),
+      );
+    }
     return this.champions$;
   }
 

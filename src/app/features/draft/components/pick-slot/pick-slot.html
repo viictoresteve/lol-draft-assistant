@@ -57,6 +57,10 @@
       class="champ-art"
       [style.background-image]="'url(' + champArt(champion.id) + ')'"
     ></div>
+    <!-- Hidden probe: detects a broken splash so champArt falls back to the icon -->
+    @if (splashProbeUrl(champion.id); as probe) {
+      <img class="art-probe" [src]="probe" (error)="onArtError(champion.id)" alt="" aria-hidden="true" />
+    }
     <div class="slot-overlay">
       <div class="slot-footer">
         <span class="role-pill" [class]="'role-' + pick().role">{{ pick().role }}</span>

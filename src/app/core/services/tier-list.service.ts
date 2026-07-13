@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { DraftRole } from '@features/draft/models/draft.interface';
 import { environment } from 'src/environments/environment';
+import { retryBackoff } from '@core/util/retry-backoff';
 
 export interface ChampionTierEntry {
   name: string;
@@ -52,6 +53,7 @@ export class TierListService {
       return this.cache.get(role)!;
     }
     const req$ = this.http.get<TierResponse>(buildUrl(role)).pipe(
+      retryBackoff(),
       map((res) => this.parse(res)),
       catchError(() => of(null)),
       shareReplay(1),

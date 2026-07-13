@@ -101,19 +101,41 @@ export class PickSlot {
     return m;
   });
 
+  /** Champion ids whose Community Dragon splash failed to load → use the icon. */
+  private brokenArt = signal<string | null>(null);
+
+  private squareIcon(championId: string): string {
+    return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
+  }
+
+  private splashKey(championId: string): string | undefined {
+    return this.pick().champion?.key ?? this.keyById().get(championId);
+  }
+
   /**
    * High-res, face-centered champion art for the slot.
    * Community Dragon's "centered" splash (~1920px) is sharp at any slot size and
-   * always framed on the champion — fixing both the pixelation of the 120px
-   * square icon and the inconsistent cropping of the loading splash.
-   * Falls back to the square icon if the numeric key isn't known yet.
+   * always framed on the champion. Falls back to the square icon when the key
+   * isn't known or when the splash failed to load (see the hidden probe).
    */
   champArt(championId: string): string {
-    const key = this.pick().champion?.key ?? this.keyById().get(championId);
-    if (key) {
+    const key = this.splashKey(championId);
+    if (key && this.brokenArt() !== championId) {
       return `https://cdn.communitydragon.org/latest/champion/${key}/splash-art/centered`;
     }
-    return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${championId}.png`;
+    return this.squareIcon(championId);
+  }
+
+  /** URL for the hidden probe img (empty once we already know it's broken). */
+  splashProbeUrl(championId: string): string {
+    const key = this.splashKey(championId);
+    return key && this.brokenArt() !== championId
+      ? `https://cdn.communitydragon.org/latest/champion/${key}/splash-art/centered`
+      : '';
+  }
+
+  onArtError(championId: string) {
+    this.brokenArt.set(championId);
   }
 
   removePick(event: Event) {
