@@ -99,3 +99,22 @@
   &:hover { color: #c8aa6e; border-color: #785a28; }
   &.active { color: #c89b3c; border-color: #785a28; background: #1e2328; }
 }
+
+/* ── Mobile nav: horizontally scrollable, compact ── */
+@media (max-width: 640px) {
+  .app-nav {
+    padding: 0 8px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    &::-webkit-scrollbar { display: none; }
+  }
+  .app-nav > * { flex-shrink: 0; }
+  .patch-badge, .nav-divider { display: none; }
+  .app-brand { font-size: 0.75rem; }
+  .nav-link { padding: 0 10px; font-size: 0.72rem; }
+  .lang-selector { margin-left: 6px; }
+
+  .api-key-banner { flex-wrap: wrap; gap: 6px; padding: 6px 12px; text-align: center; }
+}

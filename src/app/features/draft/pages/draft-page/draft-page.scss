@@ -517,6 +517,14 @@
 @media (max-width: 600px) {
   .draft-board { padding: 8px 8px 20px; }
 
+  /* Header: let the selectors span full width instead of getting squished */
+  .board-header { gap: 6px; margin-bottom: 8px; }
+  .side-selector { flex: 1 1 100%; justify-content: flex-start; }
+  .role-selector { flex: 1 1 100%; }
+  .role-selector .role-btn { flex: 1; text-align: center; }
+  .reset-btn { margin-left: 0; }
+  .template-dropdown { width: calc(100vw - 20px); }
+
   .board-content { grid-template-columns: 1fr; gap: 8px; }
 
   .center-panel { grid-column: 1; }

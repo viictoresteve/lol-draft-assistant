@@ -30,8 +30,24 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Never let a stray wide element cause the whole page to scroll sideways on
+   mobile. `clip` (unlike `hidden`) doesn't break position: sticky descendants. */
+body {
+  overflow-x: clip;
+}
+
 main {
   display: block;
+}
+
+/* On phones, text inputs below 16px make iOS zoom in on focus — jarring.
+   Force the effective size up just on small screens. */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 button {
