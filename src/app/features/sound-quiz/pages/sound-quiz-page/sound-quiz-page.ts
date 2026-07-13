@@ -42,6 +42,16 @@ export class SoundQuizPage {
     return this.quiz.searchChampions(term);
   });
 
+  // Round-by-round record submitted with the score so others can see the RNG.
+  matchRounds = computed(() =>
+    this.outcomes().map((o) => ({
+      id: o.champion.id,
+      name: o.champion.name,
+      ok: o.correct,
+      pts: o.points,
+    })),
+  );
+
   matchRank = computed(() => {
     const pct = this.maxScore() > 0 ? this.score() / this.maxScore() : 0;
     if (pct >= 0.9)  return { label: 'S', color: '#0ac8b9' };

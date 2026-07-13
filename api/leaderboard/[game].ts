@@ -41,19 +41,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const c = creds();
   if (!c) { res.status(503).json({ error: 'Leaderboard not configured', entries: [] }); return; }
 
-  const key = `lb:${game}`;
+  const key = `lb:${game}`;      // sorted set: name → best score
+  const mkey = `mh:${game}`;     // hash: name → JSON of that best game's rounds
 
   try {
+    // Fetch one player's stored match history (what champs/abilities they faced).
+    if (req.method === 'GET' && req.query['player']) {
+      const player = String(req.query['player']).slice(0, 20);
+      const raw = (await redis(c.url, c.token, ['HGET', mkey, player])) as string | null;
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(200).json({ rounds: raw ? JSON.parse(raw) : [] });
+      return;
+    }
+
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body ?? {});
       const name = String(body.name ?? '').trim().slice(0, 20).replace(/[<>]/g, '');
       const score = Math.max(0, Math.min(100000, Math.round(Number(body.score))));
       if (!name || !Number.isFinite(score)) { res.status(400).json({ error: 'Invalid entry' }); return; }
 
+      // Only overwrite the stored match when this is the player's new best, so the
+      // history always matches the score shown on the board.
+      const prev = (await redis(c.url, c.token, ['ZSCORE', key, name])) as string | null;
+      const isBest = prev == null || score >= Number(prev);
+
       // Keep only the player's best score (GT = update only if greater)…
       await redis(c.url, c.token, ['ZADD', key, 'GT', score, name]);
       // …and cap the set to the top MAX_ENTRIES.
       await redis(c.url, c.token, ['ZREMRANGEBYRANK', key, 0, -(MAX_ENTRIES + 1)]);
+
+      if (isBest && Array.isArray(body.match) && body.match.length > 0) {
+        // Sanitize + bound the match record before storing.
+        const rounds = body.match.slice(0, 15).map((r: Record<string, unknown>) => ({
+          id: String(r['id'] ?? '').slice(0, 40),
+          name: String(r['name'] ?? '').slice(0, 40),
+          ok: !!r['ok'],
+          pts: Math.max(0, Math.min(1000, Math.round(Number(r['pts']) || 0))),
+          tag: r['tag'] ? String(r['tag']).slice(0, 12) : undefined,
+        }));
+        await redis(c.url, c.token, ['HSET', mkey, name, JSON.stringify(rounds)]);
+      }
     }
 
     const raw = (await redis(c.url, c.token, ['ZRANGE', key, 0, MAX_ENTRIES - 1, 'REV', 'WITHSCORES'])) as string[];

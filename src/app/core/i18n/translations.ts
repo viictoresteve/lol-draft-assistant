@@ -166,6 +166,7 @@ export const TRANSLATIONS = {
     lbEmpty: 'No scores yet — be the first!',
     lbUnavailable: 'Leaderboard unavailable right now.',
     lbYou: 'you',
+    lbNoHistory: 'No match history saved for this run.',
     // Toast / error messages
     aiRateLimited: 'AI is rate-limited right now — wait a few seconds and try again.',
     aiFailed: 'AI request failed. Check your key in Settings or try again.',
@@ -339,6 +340,7 @@ export const TRANSLATIONS = {
     lbEmpty: 'Aún no hay puntuaciones — ¡sé el primero!',
     lbUnavailable: 'Clasificación no disponible ahora mismo.',
     lbYou: 'tú',
+    lbNoHistory: 'No hay historial guardado de esta partida.',
     // Toast / error messages
     aiRateLimited: 'La IA está saturada ahora mismo — espera unos segundos y reinténtalo.',
     aiFailed: 'Falló la petición a la IA. Revisa tu clave en Ajustes o reinténtalo.',

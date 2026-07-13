@@ -56,6 +56,17 @@ export class PuzzlePage {
   revealedHints = this.puzzleService.revealedHints;
   lastAttempt   = this.puzzleService.lastAttempt;
 
+  // Round-by-round record submitted with the score so others can see the RNG.
+  matchRounds = computed(() =>
+    this.roundResults().map((rr) => ({
+      id: rr.champion.id,
+      name: rr.champion.name,
+      ok: !rr.gaveUp && (rr.grade === 'perfect' || rr.grade === 'great' || rr.grade === 'good'),
+      pts: rr.points,
+      tag: rr.grade,
+    })),
+  );
+
   /** Final letter rank for the match summary */
   matchRank = computed(() => {
     const pct = this.maxMatchScore() > 0 ? this.matchScore() / this.maxMatchScore() : 0;

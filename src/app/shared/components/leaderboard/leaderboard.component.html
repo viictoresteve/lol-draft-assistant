@@ -32,10 +32,33 @@
   } @else {
     <ol class="lb-list">
       @for (e of entries(); track $index) {
-        <li class="lb-row" [class.me]="isMe(e, $index)">
-          <span class="lb-rank" [class.top1]="$index === 0" [class.top2]="$index === 1" [class.top3]="$index === 2">{{ $index + 1 }}</span>
-          <span class="lb-player">{{ e.name }}@if (isMe(e, $index)) { <span class="lb-you">({{ ls.T().lbYou }})</span> }</span>
-          <span class="lb-score">{{ e.score }}</span>
+        <li class="lb-item">
+          <button class="lb-row" [class.me]="isMe(e, $index)" [class.open]="openPlayer() === e.name" (click)="toggleDetail(e.name)">
+            <span class="lb-rank" [class.top1]="$index === 0" [class.top2]="$index === 1" [class.top3]="$index === 2">{{ $index + 1 }}</span>
+            <span class="lb-player">{{ e.name }}@if (isMe(e, $index)) { <span class="lb-you">({{ ls.T().lbYou }})</span> }</span>
+            <span class="lb-score">{{ e.score }}</span>
+            <span class="lb-caret" aria-hidden="true">{{ openPlayer() === e.name ? '▾' : '▸' }}</span>
+          </button>
+
+          @if (openPlayer() === e.name) {
+            <div class="lb-detail">
+              @if (matchLoading()) {
+                <div class="lb-spinner small"></div>
+              } @else if (matchRounds().length === 0) {
+                <p class="lb-note tiny">{{ ls.T().lbNoHistory }}</p>
+              } @else {
+                <div class="lb-rounds">
+                  @for (r of matchRounds(); track $index) {
+                    <div class="lb-round" [class.ok]="r.ok" [class.no]="!r.ok" [title]="r.name + (r.tag ? ' · ' + r.tag : '')">
+                      <img [src]="icon(r.id)" [alt]="r.name" width="34" height="34" appImgFallback />
+                      <span class="lb-round-mark">{{ r.ok ? '✓' : '✗' }}</span>
+                      @if (r.tag) { <span class="lb-round-tag">{{ r.tag }}</span> }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
         </li>
       }
     </ol>

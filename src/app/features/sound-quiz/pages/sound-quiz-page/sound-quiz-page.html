@@ -134,7 +134,7 @@
           </div>
         }
       </div>
-      <app-leaderboard game="sounds" [score]="score()" />
+      <app-leaderboard game="sounds" [score]="score()" [match]="matchRounds()" />
 
       <div class="summary-actions">
         <button class="start-btn" (click)="start()">{{ ls.T().quizPlayAgain }}</button>

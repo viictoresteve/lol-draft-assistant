@@ -11,6 +11,15 @@ export interface LeaderboardEntry {
   score: number;
 }
 
+/** One round of a stored match — what the player faced and how they did. */
+export interface MatchRound {
+  id: string;    // champion id, to rebuild the icon
+  name: string;  // champion name
+  ok: boolean;   // correct / good pick
+  pts: number;   // points earned
+  tag?: string;  // optional label (ability slot, puzzle grade…)
+}
+
 interface LeaderboardResponse {
   entries?: LeaderboardEntry[];
 }
@@ -36,11 +45,20 @@ export class LeaderboardService {
       .pipe(map((r) => r.entries ?? []), catchError(() => of([])));
   }
 
-  submit(game: LeaderboardGame, name: string, score: number): Observable<LeaderboardEntry[]> {
+  submit(game: LeaderboardGame, name: string, score: number, match: MatchRound[] = []): Observable<LeaderboardEntry[]> {
     this.setName(name);
     return this.http
-      .post<LeaderboardResponse>(`${environment.proxyUrl}/api/leaderboard/${game}`, { name, score })
+      .post<LeaderboardResponse>(`${environment.proxyUrl}/api/leaderboard/${game}`, { name, score, match })
       .pipe(map((r) => r.entries ?? []), catchError(() => of([])));
+  }
+
+  /** The stored round-by-round history of a player's best game. */
+  getMatch(game: LeaderboardGame, player: string): Observable<MatchRound[]> {
+    return this.http
+      .get<{ rounds?: MatchRound[] }>(
+        `${environment.proxyUrl}/api/leaderboard/${game}?player=${encodeURIComponent(player)}`,
+      )
+      .pipe(map((r) => r.rounds ?? []), catchError(() => of([])));
   }
 
   private readName(): string {
