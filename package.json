@@ -1,6 +1,22 @@
 {
   "name": "lol-draft-assistant",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "AI-powered League of Legends champion-select assistant grounded in real match data — live draft suggestions, counter analysis and coaching, plus three training mini-games. Angular 21 + NgRx.",
+  "author": "Víctor Esteve",
+  "license": "MIT",
+  "homepage": "https://lol-draft-assistant-sable.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viictoresteve/lol-draft-assistant.git"
+  },
+  "keywords": [
+    "league-of-legends",
+    "angular",
+    "ngrx",
+    "ai",
+    "draft",
+    "champion-select"
+  ],
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

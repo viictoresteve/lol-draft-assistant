@@ -45,3 +45,9 @@ __screenshots__/
 Thumbs.db
 
 .vercel
+
+# Secrets / local env (never commit real values — use *.env.example templates)
+.env
+.env.local
+.env.*.local
+server/.env
