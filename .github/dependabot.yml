@@ -14,6 +14,18 @@ updates:
         patterns: ["@angular*", "@ngrx*"]
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # Angular majors force a coordinated Node + tooling upgrade — do them
+      # deliberately with `ng update`, not via an auto-bump PR.
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "angular-eslint"
+        update-types: ["version-update:semver-major"]
+      # TypeScript's major is pinned by the Angular compiler — never jump ahead.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # The Node/Express dev proxy
   - package-ecosystem: npm
@@ -21,6 +33,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # The GitHub Actions themselves (e.g. actions/checkout versions)
   - package-ecosystem: github-actions
