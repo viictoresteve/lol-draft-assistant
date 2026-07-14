@@ -93,3 +93,96 @@ export function parseCounterText(text: string): { damageType: string; counters: 
 
   return { damageType, counters: topCounters };
 }
+
+// ── Build parser (items / runes / skills / spells / combos) ──────────────────
+
+const SUMMONER_SPELL_NAMES: Record<number, string> = {
+  1: 'Cleanse', 3: 'Exhaust', 4: 'Flash', 6: 'Ghost', 7: 'Heal',
+  11: 'Smite', 12: 'Teleport', 13: 'Clarity', 14: 'Ignite', 21: 'Barrier', 32: 'Mark',
+};
+
+export interface ChampionBuild {
+  coreItems: { id: number; name: string }[];
+  boots: { id: number; name: string } | null;
+  starterItems: { id: number; name: string }[];
+  summonerSpells: { id: number; name: string }[];
+  runes: { keystone: string; primaryTree: string; secondaryTree: string; primary: string[]; secondary: string[] };
+  skillOrder: string[];       // priority, e.g. ["Q","E","W"]
+  skillLevels: string[];      // raw level-up sequence
+  combos: { name: string; url: string }[];
+  winRate: number;            // of the core build, 0–100
+}
+
+/** Match every `CoreItems([ids],[names],play,win,pick)` block in document order. */
+function coreItemBlocks(text: string): { ids: number[]; names: string[]; play: number }[] {
+  const re = /CoreItems\(\[([\d,]*)\],\[([^\]]*)\],(\d+),\d+,[\d.]+\)/g;
+  const out: { ids: number[]; names: string[]; play: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const ids = m[1] ? m[1].split(',').map((n) => parseInt(n, 10)) : [];
+    // names are quoted strings for items, bare numbers for the spells block
+    const names = (m[2].match(/"([^"]*)"/g) ?? []).map((s) => s.slice(1, -1));
+    out.push({ ids, names, play: parseInt(m[3], 10) });
+  }
+  return out;
+}
+
+/** Compute Q/W/E max priority from the raw level-up order. */
+function skillPriority(order: string[]): string[] {
+  const counts: Record<string, number> = { Q: 0, W: 0, E: 0 };
+  const fifthAt: Record<string, number> = {};
+  order.forEach((s, i) => {
+    if (counts[s] !== undefined) {
+      counts[s]++;
+      if (counts[s] === 5 && fifthAt[s] === undefined) fifthAt[s] = i;
+    }
+  });
+  return ['Q', 'W', 'E'].sort((a, b) => {
+    const fa = fifthAt[a] ?? 99, fb = fifthAt[b] ?? 99;
+    return fa !== fb ? fa - fb : counts[b] - counts[a];
+  });
+}
+
+/** Parse the full build out of a champion-analysis payload. */
+export function parseBuildText(text: string): ChampionBuild {
+  const blocks = coreItemBlocks(text);
+  const asItem = (b?: { ids: number[]; names: string[] }) =>
+    b && b.ids.length ? b.ids.map((id, i) => ({ id, name: b.names[i] ?? '' })) : [];
+
+  const coreItems = asItem(blocks[0]);
+  const bootsArr = asItem(blocks[1]);
+  const boots = bootsArr[0] ?? null;
+  const starterItems = asItem(blocks[2]);
+
+  // Summoner spells: the CoreItems block immediately before `Runes(` (ids only, no names).
+  const runesIdx = text.indexOf('Runes(');
+  let summonerSpells: { id: number; name: string }[] = [];
+  const spellMatch = text.slice(0, runesIdx).match(/CoreItems\(\[([\d,]+)\],\[[\d,]+\],\d+,\d+,[\d.]+\)\s*,?\s*$/);
+  const spellIds = spellMatch ? spellMatch[1].split(',').map((n) => parseInt(n, 10)) : [];
+  summonerSpells = spellIds.map((id) => ({ id, name: SUMMONER_SPELL_NAMES[id] ?? '' })).filter((s) => s.name);
+
+  // Runes: Runes(keystone,primaryPageId,"PrimaryTree",[ids],["names"],secondaryPageId,"SecondaryTree",[ids],["names"],...)
+  const runes = { keystone: '', primaryTree: '', secondaryTree: '', primary: [] as string[], secondary: [] as string[] };
+  const rm = text.match(/Runes\(\d+,\d+,"([^"]+)",\[[\d,]*\],\[([^\]]*)\],\d+,"([^"]+)",\[[\d,]*\],\[([^\]]*)\]/);
+  if (rm) {
+    runes.primaryTree = rm[1];
+    runes.primary = (rm[2].match(/"([^"]*)"/g) ?? []).map((s) => s.slice(1, -1));
+    runes.secondaryTree = rm[3];
+    runes.secondary = (rm[4].match(/"([^"]*)"/g) ?? []).map((s) => s.slice(1, -1));
+    runes.keystone = runes.primary[0] ?? '';
+  }
+
+  // Skills
+  const sm = text.match(/Skills\(\[([^\]]*)\],(\d+),(\d+)/);
+  const skillLevels = sm ? (sm[1].match(/"([A-Z])"/g) ?? []).map((s) => s.slice(1, -1)) : [];
+  const skillOrder = skillLevels.length ? skillPriority(skillLevels) : [];
+  const winRate = sm ? Math.round((parseInt(sm[3], 10) / parseInt(sm[2], 10)) * 100) : 0;
+
+  // Combos
+  const combos: { name: string; url: string }[] = [];
+  const cr = /SkillCombo\("([^"]+)","([^"]+)"\)/g;
+  let cm: RegExpExecArray | null;
+  while ((cm = cr.exec(text)) !== null) combos.push({ name: cm[1], url: cm[2] });
+
+  return { coreItems, boots, starterItems, summonerSpells, runes, skillOrder, skillLevels, combos: combos.slice(0, 4), winRate };
+}
