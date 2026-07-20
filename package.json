@@ -54,7 +54,7 @@
     "@angular/service-worker": "^21.2.18",
     "@ngrx/effects": "^21.1.1",
     "@ngrx/store": "^21.1.1",
-    "@sentry/angular": "^10.65.0",
+    "@sentry/angular": "^10.67.0",
     "html2canvas": "^1.4.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
