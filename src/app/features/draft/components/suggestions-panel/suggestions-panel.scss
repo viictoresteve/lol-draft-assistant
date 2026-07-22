@@ -778,3 +778,58 @@
   margin: 8px 0;
   font-style: italic;
 }
+
+/* ══ Build tab (real OP.GG data) ══ */
+.build-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.build-row { display: flex; gap: 20px; flex-wrap: wrap; }
+.build-section { display: flex; flex-direction: column; gap: 5px; }
+.build-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #5a6a7a;
+}
+.build-wr { color: #0ac8b9; font-size: 0.625rem; margin-left: 4px; }
+.build-items { display: flex; gap: 5px; flex-wrap: wrap; }
+.build-items img { border-radius: 5px; border: 1px solid #2a3545; background: #0d1117; }
+
+.build-skills { display: flex; align-items: center; gap: 3px; }
+.skill-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 4px;
+  background: #1a2535; border: 1px solid #2a3a4a;
+  font-size: 0.6875rem; font-weight: 800; color: #c8aa6e;
+}
+.skill-arrow { color: #3a4a5a; font-size: 0.6875rem; }
+
+.build-spells { display: flex; gap: 4px; }
+.build-spells img { border-radius: 4px; border: 1px solid #2a3545; }
+
+.build-runes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rune-keystone {
+  font-size: 0.75rem; font-weight: 700; color: #e0b050;
+  background: rgba(224, 176, 80, 0.1); border: 1px solid rgba(224, 176, 80, 0.25);
+  padding: 3px 8px; border-radius: 4px;
+}
+.rune-chip {
+  font-size: 0.6875rem; color: #9aacbc;
+  background: #131c26; border: 1px solid #1e2a38;
+  padding: 2px 7px; border-radius: 4px;
+  &.sec { color: #7a8a9a; opacity: 0.85; }
+}
+.rune-sep { color: #3a4a5a; }
+
+.build-combos { display: flex; gap: 6px; flex-wrap: wrap; }
+.combo-chip {
+  font-size: 0.6875rem; font-weight: 600; color: #6ab0e0;
+  background: rgba(100, 170, 240, 0.08); border: 1px solid rgba(100, 170, 240, 0.2);
+  padding: 3px 9px; border-radius: 4px; text-decoration: none;
+  transition: all 0.12s;
+  &:hover { background: rgba(100, 170, 240, 0.16); color: #90ccff; }
+}

@@ -25,17 +25,23 @@
     }
 
     <div class="panel-actions">
-      <!-- Champion tips tab (shown once user has picked) -->
+      <!-- Champion tips + build tabs (shown once user has picked) -->
       @if (hasPick() && !showPoolPanel()) {
         <button
           class="tab-btn"
           [class.active]="panelTab() === 'champion-tips'"
           (click)="panelTab.set(panelTab() === 'champion-tips' ? 'suggestions' : 'champion-tips')"
-          [title]="panelTab() === 'champion-tips' ? 'Back to suggestions' : 'Champion mechanics & synergies'"
+          title="Champion mechanics & synergies"
         >
           @if (isLoadingChampionTips()) { <span class="tab-spinner"></span> }
-          {{ panelTab() === 'champion-tips' ? '← Suggestions' : '⚡ Tips' }}
+          ⚡ {{ ls.T().tabTips }}
         </button>
+        <button
+          class="tab-btn"
+          [class.active]="panelTab() === 'build'"
+          (click)="panelTab.set(panelTab() === 'build' ? 'suggestions' : 'build')"
+          title="Real OP.GG build"
+        >🛠 {{ ls.T().tabBuild }}</button>
       }
       @if (userRole()) {
         <button
@@ -114,6 +120,84 @@
 
     } @else {
       <p class="empty">Pick your champion to get mechanics and synergy tips</p>
+    }
+
+  <!-- ══ BUILD TAB (real OP.GG data) ══ -->
+  } @else if (panelTab() === 'build') {
+    @if (build(); as b) {
+      <div class="build-view" aria-label="Build" aria-live="polite">
+        <div class="build-section">
+          <span class="build-label">{{ ls.T().buildCore }} @if (b.winRate) { <b class="build-wr">{{ b.winRate }}% WR</b> }</span>
+          <div class="build-items">
+            @for (it of b.coreItems; track $index) {
+              <img [src]="itemIcon(it.id)" [alt]="it.name" [title]="it.name" width="34" height="34" appImgFallback />
+            }
+          </div>
+        </div>
+
+        <div class="build-row">
+          @if (b.boots) {
+            <div class="build-section">
+              <span class="build-label">{{ ls.T().buildBoots }}</span>
+              <div class="build-items"><img [src]="itemIcon(b.boots.id)" [alt]="b.boots.name" [title]="b.boots.name" width="30" height="30" appImgFallback /></div>
+            </div>
+          }
+          @if (b.starterItems.length) {
+            <div class="build-section">
+              <span class="build-label">{{ ls.T().buildStarter }}</span>
+              <div class="build-items">
+                @for (it of b.starterItems; track $index) {
+                  <img [src]="itemIcon(it.id)" [alt]="it.name" [title]="it.name" width="30" height="30" appImgFallback />
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="build-row">
+          <div class="build-section">
+            <span class="build-label">{{ ls.T().buildSkills }}</span>
+            <div class="build-skills">
+              @for (s of b.skillOrder; track $index) {
+                <span class="skill-key">{{ s }}</span>@if (!$last) { <span class="skill-arrow">→</span> }
+              }
+            </div>
+          </div>
+          @if (b.summonerSpells.length) {
+            <div class="build-section">
+              <span class="build-label">{{ ls.T().buildSpells }}</span>
+              <div class="build-spells">
+                @for (sp of b.summonerSpells; track sp.id) {
+                  <img [src]="getSpellImageUrl(sp.name)" [alt]="sp.name" [title]="sp.name" width="26" height="26" appImgFallback />
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="build-section">
+          <span class="build-label">{{ ls.T().buildRunes }}</span>
+          <div class="build-runes">
+            <span class="rune-keystone">{{ b.runes.keystone }}</span>
+            @for (r of b.runes.primary.slice(1); track r) { <span class="rune-chip">{{ r }}</span> }
+            <span class="rune-sep">·</span>
+            @for (r of b.runes.secondary; track r) { <span class="rune-chip sec">{{ r }}</span> }
+          </div>
+        </div>
+
+        @if (b.combos.length) {
+          <div class="build-section">
+            <span class="build-label">{{ ls.T().buildCombos }}</span>
+            <div class="build-combos">
+              @for (c of b.combos; track c.name) {
+                <a class="combo-chip" [href]="c.url" target="_blank" rel="noopener">{{ c.name }} ▶</a>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="loading" aria-live="polite"><div class="spinner"></div><p>{{ ls.T().buildLoading }}</p></div>
     }
 
   } @else if (!userRole()) { <!-- no role selected -->

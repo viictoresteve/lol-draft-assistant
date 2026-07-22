@@ -1,0 +1,10 @@
+{
+  // Run these clean-ups automatically every time you save a file (Cmd+S):
+  "editor.codeActionsOnSave": {
+    // Removes unused imports and sorts the remaining ones (TypeScript).
+    "source.organizeImports": "explicit",
+    // Applies any auto-fixable ESLint fixes using this project's config.
+    // Requires the "ESLint" extension (dbaeumer.vscode-eslint).
+    "source.fixAll.eslint": "explicit"
+  }
+}

@@ -1,36 +1,47 @@
 import {
-  Component,
   ChangeDetectionStrategy,
-  inject,
+  Component,
   computed,
-  signal,
   effect,
+  inject,
+  signal,
   untracked,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { Store } from '@ngrx/store';
-import {
-  selectSuggestions,
-  selectIsAnalyzing,
-  selectUserRole,
-  selectAllyPicks,
-  selectEnemyPicks,
-  selectAllyBans,
-  selectEnemyBans,
-  selectGameplayTips,
-  selectIsLoadingTips,
-  selectDraftError,
-  selectChampionTips,
-  selectIsLoadingChampionTips,
-} from '@store/draft/draft.selectors';
-import { selectPoolChampionIds, selectByRole } from '@store/pool/pool.selectors';
-import * as DraftActions from '@store/draft/draft.actions';
-import * as PoolActions from '@store/pool/pool.actions';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
+import { BuildService } from '@core/services/build.service';
 import { ChampionsService } from '@core/services/champions.service';
-import { Suggestion, DraftRole, DraftPick, GameplayTip, GameplayPhase, ChampionTip, ChampionTipType } from '@features/draft/models/draft.interface';
-import { Champion } from '@shared/models/champion.interface';
 import { LanguageService } from '@core/services/language.service';
 import { PatchService } from '@core/services/patch.service';
+import {
+  ChampionTip,
+  ChampionTipType,
+  DraftPick,
+  DraftRole,
+  GameplayPhase,
+  GameplayTip,
+  Suggestion,
+} from '@features/draft/models/draft.interface';
+import { Store } from '@ngrx/store';
+import { Champion } from '@shared/models/champion.interface';
+import * as DraftActions from '@store/draft/draft.actions';
+import {
+  selectAllyBans,
+  selectAllyPicks,
+  selectChampionTips,
+  selectDraftError,
+  selectEnemyBans,
+  selectEnemyPicks,
+  selectGameplayTips,
+  selectIsAnalyzing,
+  selectIsLoadingChampionTips,
+  selectIsLoadingTips,
+  selectSuggestions,
+  selectUserRole,
+} from '@store/draft/draft.selectors';
+import * as PoolActions from '@store/pool/pool.actions';
+import { selectByRole, selectPoolChampionIds } from '@store/pool/pool.selectors';
+import { of, switchMap } from 'rxjs';
 
 const SPELL_ID_MAP: Record<string, string> = {
   flash: 'SummonerFlash',
@@ -47,17 +58,17 @@ const SPELL_ID_MAP: Record<string, string> = {
 };
 
 const PHASE_LABELS: Record<GameplayPhase, { en: string; es: string }> = {
-  early:      { en: 'Early',      es: 'Early'     },
-  trade:      { en: 'Trading',    es: 'Tradear'   },
-  teamfight:  { en: 'Teamfight',  es: 'Teamfight' },
-  win:        { en: 'Win cond.',  es: 'Ganar'     },
-  danger:     { en: 'Danger',     es: 'Peligro'   },
+  early: { en: 'Early', es: 'Early' },
+  trade: { en: 'Trading', es: 'Tradear' },
+  teamfight: { en: 'Teamfight', es: 'Teamfight' },
+  win: { en: 'Win cond.', es: 'Ganar' },
+  danger: { en: 'Danger', es: 'Peligro' },
 };
 
 @Component({
   selector: 'app-suggestions-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [ImgFallbackDirective],
   templateUrl: './suggestions-panel.html',
   styleUrl: './suggestions-panel.scss',
 })
@@ -66,6 +77,7 @@ export class SuggestionsPanel {
   ls = inject(LanguageService);
   private patchService = inject(PatchService);
   private champService = inject(ChampionsService);
+  private buildService = inject(BuildService);
 
   private rawSuggestions = toSignal(this.store.select(selectSuggestions), {
     initialValue: [] as Suggestion[],
@@ -86,28 +98,52 @@ export class SuggestionsPanel {
     initialValue: [] as Champion[],
   });
 
-  isAnalyzing  = toSignal(this.store.select(selectIsAnalyzing),  { initialValue: false });
-  userRole     = toSignal(this.store.select(selectUserRole),     { initialValue: null as DraftRole | null });
-  gameplayTips = toSignal(this.store.select(selectGameplayTips), { initialValue: [] as GameplayTip[] });
+  isAnalyzing = toSignal(this.store.select(selectIsAnalyzing), { initialValue: false });
+  userRole = toSignal(this.store.select(selectUserRole), {
+    initialValue: null as DraftRole | null,
+  });
+  gameplayTips = toSignal(this.store.select(selectGameplayTips), {
+    initialValue: [] as GameplayTip[],
+  });
   isLoadingTips = toSignal(this.store.select(selectIsLoadingTips), { initialValue: false });
-  error        = toSignal(this.store.select(selectDraftError),   { initialValue: null as string | null });
-  championTips = toSignal(this.store.select(selectChampionTips), { initialValue: [] as ChampionTip[] });
-  isLoadingChampionTips = toSignal(this.store.select(selectIsLoadingChampionTips), { initialValue: false });
+  error = toSignal(this.store.select(selectDraftError), { initialValue: null as string | null });
+  championTips = toSignal(this.store.select(selectChampionTips), {
+    initialValue: [] as ChampionTip[],
+  });
+  isLoadingChampionTips = toSignal(this.store.select(selectIsLoadingChampionTips), {
+    initialValue: false,
+  });
 
-  // Tab toggle: 'suggestions' | 'champion-tips'
-  panelTab = signal<'suggestions' | 'champion-tips'>('suggestions');
+  // Build reactively derived from the picked champion (declared next to its consumer).
+  private buildInput = computed(() => {
+    const role = this.userRole();
+    const champ = role ? this.allyPicks().find((p) => p.role === role)?.champion : null;
+    return champ && role ? { champion: champ.name, role } : null;
+  });
+  build = toSignal(
+    toObservable(this.buildInput).pipe(
+      switchMap((input) =>
+        input ? this.buildService.getBuild(input.champion, input.role) : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
+
+  // Tab toggle: 'suggestions' | 'champion-tips' | 'build'
+  panelTab = signal<'suggestions' | 'champion-tips' | 'build'>('suggestions');
 
   readonly TIP_TYPE_LABELS: Record<ChampionTipType, { label: string; color: string }> = {
-    mechanic:    { label: 'Mechanic',    color: '#6aaaff' },
-    synergy:     { label: 'Synergy',     color: '#0ac8b9' },
-    combo:       { label: 'Combo',       color: '#e0a040' },
-    counterplay: { label: 'Counter',     color: '#e06060' },
+    mechanic: { label: 'Mechanic', color: '#6aaaff' },
+    synergy: { label: 'Synergy', color: '#0ac8b9' },
+    combo: { label: 'Combo', color: '#e0a040' },
+    counterplay: { label: 'Counter', color: '#e06060' },
   };
 
   // Draft complete when all 10 picks are filled
-  isDraftComplete = computed(() =>
-    this.allyPicks().every((p) => p.champion !== null) &&
-    this.enemyPicks().every((p) => p.champion !== null),
+  isDraftComplete = computed(
+    () =>
+      this.allyPicks().every((p) => p.champion !== null) &&
+      this.enemyPicks().every((p) => p.champion !== null),
   );
 
   // Player champion and opponent for the guide header
@@ -136,8 +172,12 @@ export class SuggestionsPanel {
   private takenIds = computed(
     () =>
       new Set([
-        ...this.allyPicks().filter((p) => p.champion).map((p) => p.champion!.id),
-        ...this.enemyPicks().filter((p) => p.champion).map((p) => p.champion!.id),
+        ...this.allyPicks()
+          .filter((p) => p.champion)
+          .map((p) => p.champion!.id),
+        ...this.enemyPicks()
+          .filter((p) => p.champion)
+          .map((p) => p.champion!.id),
         ...this.allyBans().map((c) => c.id),
         ...this.enemyBans().map((c) => c.id),
       ]),
@@ -173,8 +213,12 @@ export class SuggestionsPanel {
     });
   }
 
-  prevPage() { if (this.page() > 0) this.page.update((p) => p - 1); }
-  nextPage() { if (this.page() < this.pageCount() - 1) this.page.update((p) => p + 1); }
+  prevPage() {
+    if (this.page() > 0) this.page.update((p) => p - 1);
+  }
+  nextPage() {
+    if (this.page() < this.pageCount() - 1) this.page.update((p) => p + 1);
+  }
 
   setView(v: 'pros' | 'cons') {
     this.activeView.set(this.activeView() === v ? 'all' : v);
@@ -205,13 +249,20 @@ export class SuggestionsPanel {
     return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/champion/${id}.png`;
   }
 
+  itemIcon(id: number): string {
+    return `https://ddragon.leagueoflegends.com/cdn/${this.patchService.version()}/img/item/${id}.png`;
+  }
+
   // ── Pool mini-panel ──────────────────────────────────────────────────────
 
   showPoolPanel = signal(false);
   poolSearchTerm = signal('');
 
   private byRole = toSignal(this.store.select(selectByRole), {
-    initialValue: { top: [], jungle: [], mid: [], adc: [], support: [] } as Record<DraftRole, Champion[]>,
+    initialValue: { top: [], jungle: [], mid: [], adc: [], support: [] } as Record<
+      DraftRole,
+      Champion[]
+    >,
   });
 
   private allChampions = toSignal(this.champService.getChampions(), {
