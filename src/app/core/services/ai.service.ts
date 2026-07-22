@@ -9,6 +9,7 @@ import { TierListService, ChampionTierEntry } from '@core/services/tier-list.ser
 import { MatchupService, ChampionMatchupData } from '@core/services/matchup.service';
 import { PatchService } from '@core/services/patch.service';
 import { ChampionDetailService } from '@core/services/champion-detail.service';
+import { BuildService, ChampionBuild } from '@core/services/build.service';
 import { AbilityInfo } from '@features/ability-quiz/models/ability-quiz.interface';
 import {
   DraftPuzzle, PuzzleAnswer, PuzzleDifficulty, PickGrade,
@@ -60,6 +61,7 @@ export class AiService {
   private matchupService  = inject(MatchupService);
   private patchService    = inject(PatchService);
   private detailService   = inject(ChampionDetailService);
+  private buildService    = inject(BuildService);
 
   /**
    * In-memory cache of AI responses keyed by the exact prompt, so identical
@@ -637,12 +639,15 @@ Rules for macroTips (3-4 items):
   // ── Champion tips (niche mechanics + synergies for the user's picked champ) ─
 
   analyzeChampionTips(request: ChampionTipsRequest): Observable<ChampionTip[]> {
-    // Ground the tips in the champion's REAL kit (Riot data) so the model
-    // reasons about actual abilities instead of hallucinating from memory.
-    return this.detailService.getAbilities(request.champion.id).pipe(
-      catchError(() => of([] as AbilityInfo[])),
-      switchMap((abilities) => {
-        const prompt = this.buildChampionTipsPrompt(request, abilities);
+    // Ground the tips in the champion's REAL kit (Riot data) AND real OP.GG
+    // build so combo/spike advice matches the actual skill order and items,
+    // instead of the model hallucinating from memory.
+    return forkJoin([
+      this.detailService.getAbilities(request.champion.id).pipe(catchError(() => of([] as AbilityInfo[]))),
+      this.buildService.getBuild(request.champion.name, request.role),
+    ]).pipe(
+      switchMap(([abilities, build]) => {
+        const prompt = this.buildChampionTipsPrompt(request, abilities, build);
         return this.cached(prompt, () => this.aiHttp
           .post<AiChatResponse>({ messages: this.msgs(prompt), temperature: 0.35, max_tokens: 900 })
           .pipe(map((res) => this.parseChampionTipsResponse(res))));
@@ -650,7 +655,7 @@ Rules for macroTips (3-4 items):
     );
   }
 
-  private buildChampionTipsPrompt(request: ChampionTipsRequest, abilities: AbilityInfo[]): string {
+  private buildChampionTipsPrompt(request: ChampionTipsRequest, abilities: AbilityInfo[], build: ChampionBuild | null): string {
     const { champion, role, allyPicks, enemyPicks } = request;
     const roles: DraftRole[] = ['top', 'jungle', 'mid', 'adc', 'support'];
 
@@ -666,12 +671,21 @@ Rules for macroTips (3-4 items):
 ${abilities.map((a) => `  ${a.slot} — ${a.name}: ${a.description.replace(/\s+/g, ' ').trim().slice(0, 160)}`).join('\n')}`
       : `(Kit data unavailable — rely on your knowledge of ${champion.name}, but never invent abilities.)`;
 
+    // Real OP.GG build — grounds combo/spike/timing advice in the actual meta build.
+    const buildSection = build
+      ? `=== ${champion.name.toUpperCase()}'S REAL BUILD (OP.GG this patch — reference for combos & power spikes) ===
+Skill max order: ${build.skillOrder.join(' > ') || 'n/a'}
+Core items: ${build.coreItems.map((i) => i.name).join(' → ') || 'n/a'}
+Keystone: ${build.runes.keystone || 'n/a'}   Summoners: ${build.summonerSpells.map((s) => s.name).join(' + ') || 'n/a'}`
+      : '';
+
     const langInstruction = this.ls.T().aiLang;
 
     return `You are a Challenger-level ${champion.name} main coaching a player who just locked ${champion.name.toUpperCase()} into ${role.toUpperCase()}.
 ${langInstruction}
 
 ${kitSection}
+${buildSection}
 
 Ally team: ${allyStr}
 Enemy team: ${enemyStr}
