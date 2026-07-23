@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📋 Task board
+    url: https://github.com/viictoresteve/lol-draft-assistant/blob/main/docs/GOOD_FIRST_ISSUES.md
+    about: Ready-to-grab tasks, from good-first-issue to advanced.
+  - name: 🤝 Contributing guide
+    url: https://github.com/viictoresteve/lol-draft-assistant/blob/main/CONTRIBUTING.md
+    about: How to set up, branch, and open a PR.

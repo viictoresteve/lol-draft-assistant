@@ -129,6 +129,10 @@ Covered: AI response parsing & champion-ID sanitization, puzzle/quiz scoring, th
 
 ---
 
+## Contributing
+
+Contributions welcome! See **[CONTRIBUTING.md](CONTRIBUTING.md)** to get set up, and the **[task board](docs/GOOD_FIRST_ISSUES.md)** for ready-to-grab work (from `good first issue` to advanced).
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Not affiliated with or endorsed by Riot Games. League of Legends and all related assets are property of Riot Games, Inc.

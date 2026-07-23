@@ -94,6 +94,14 @@ export class PickSlot {
     this.closeSearch();
   }
 
+  /** Enter picks the top result — type a few letters, hit Enter, done. */
+  pickFirst() {
+    const first = this.searchTerm().trim()
+      ? this.filteredChampions()[0]
+      : this.defaultChampions()[0];
+    if (first) this.onChampionSelected(first);
+  }
+
   /** Fast id → numeric-key lookup, built once from the full champion roster. */
   private keyById = computed(() => {
     const m = new Map<string, string>();

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store, Action } from '@ngrx/store';
 import { switchMap, map, catchError, withLatestFrom, startWith, debounceTime, tap, filter } from 'rxjs/operators';
-import { of, Observable, EMPTY } from 'rxjs';
+import { of, Observable, EMPTY, from } from 'rxjs';
 import * as DraftActions from './draft.actions';
 import * as PoolActions from '@store/pool/pool.actions';
 import {
@@ -17,8 +17,11 @@ import {
 import { distinctUntilChanged } from 'rxjs/operators';
 import { selectByRole } from '@store/pool/pool.selectors';
 import { AiService } from '@core/services/ai.service';
+import { DraftRole, DraftSide } from '@features/draft/models/draft.interface';
 
 const SESSION_KEY = 'lol-draft-state';
+// Cross-session preference: the role/side you main, so you never re-select it.
+const PREFS_KEY = 'lol-draft-prefs';
 
 @Injectable()
 export class DraftEffects {
@@ -156,13 +159,41 @@ export class DraftEffects {
         switchMap(() => {
           try {
             const raw = sessionStorage.getItem(SESSION_KEY);
-            if (!raw) return EMPTY;
-            return of(DraftActions.loadDraftSuccess(JSON.parse(raw)));
+            if (raw) return of(DraftActions.loadDraftSuccess(JSON.parse(raw)));
+
+            // New session (no saved draft) → restore the role/side you main so
+            // the app opens ready-to-use with zero clicks.
+            const prefsRaw = localStorage.getItem(PREFS_KEY);
+            if (prefsRaw) {
+              const prefs = JSON.parse(prefsRaw) as { userRole?: DraftRole | null; side?: DraftSide };
+              const actions: Action[] = [];
+              if (prefs.userRole) actions.push(DraftActions.setUserRole({ role: prefs.userRole }));
+              if (prefs.side) actions.push(DraftActions.setSide({ side: prefs.side }));
+              if (actions.length) return from(actions);
+            }
+            return EMPTY;
           } catch {
             return EMPTY;
           }
         }),
       ),
+  );
+
+  // Persist role + side to localStorage as a cross-session preference.
+  savePrefs$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(DraftActions.setUserRole, DraftActions.setSide),
+        withLatestFrom(this.store.select(selectDraftForSave)),
+        tap(([_, draft]) => {
+          try {
+            localStorage.setItem(PREFS_KEY, JSON.stringify({ userRole: draft.userRole, side: draft.side }));
+          } catch {
+            /* ignore */
+          }
+        }),
+      ),
+    { dispatch: false },
   );
 
   saveDraft$ = createEffect(

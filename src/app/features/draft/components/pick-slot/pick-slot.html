@@ -23,6 +23,7 @@
         [value]="searchTerm()"
         (input)="searchTerm.set($any($event.target).value)"
         (keydown.escape)="closeSearch()"
+        (keyup.enter)="pickFirst()"
         autocomplete="off"
        
       />

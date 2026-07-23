@@ -35,7 +35,7 @@ export const TRANSLATIONS = {
     buildLoading: 'Loading build…',
     buildUnavailable: 'Build data unavailable.',
     noSuggestions: 'Pick or ban a champion to get AI suggestions',
-    selectRolePrompt: 'Select your role above to get personalized AI suggestions',
+    selectRolePrompt: 'Pick your role above — then just add the enemy laner to get suggestions (no need to fill the whole draft)',
     // Champion search
     searchPlaceholder: 'Search champion...',
     champions: 'champions',
@@ -220,7 +220,7 @@ export const TRANSLATIONS = {
     buildUnavailable: 'Build no disponible.',
     analyzingDraft: 'Analizando draft...',
     noSuggestions: 'Elige o banea un campeón para obtener sugerencias',
-    selectRolePrompt: 'Selecciona tu rol arriba para obtener sugerencias personalizadas de la IA',
+    selectRolePrompt: 'Elige tu rol arriba — luego solo añade al rival de tu línea para tener sugerencias (no hace falta rellenar todo el draft)',
     // Champion search
     searchPlaceholder: 'Buscar campeón...',
     champions: 'campeones',
