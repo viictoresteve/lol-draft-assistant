@@ -179,6 +179,11 @@ GLOBAL RULES — follow on every response:
       .join(' · ');
     const classSection = classRef ? `\n=== CHAMPION CLASSES (factual, Riot data) ===\n${classRef}` : '';
 
+    // Aggregate the ENEMY composition into a factual profile the pick must answer.
+    // This is the key signal that makes suggestions vary with the enemy comp
+    // (instead of collapsing to the same tier-list picks every time).
+    const enemyProfileSection = this.buildEnemyProfile(request.enemyPicks);
+
     const allyBansStr = request.allyBans.length
       ? request.allyBans.map((c) => c.name).join(', ')
       : 'none';
@@ -242,6 +247,7 @@ ${roleTable}
 Ally bans: ${allyBansStr}
 Enemy bans: ${enemyBansStr}${request.allyCompName ? `\nAlly comp: ${request.allyCompName}` : ''}${request.enemyCompName ? `\nEnemy comp: ${request.enemyCompName}` : ''}
 ${classSection}
+${enemyProfileSection}
 
 === PLAYER ===
 ${roleSection}
@@ -344,13 +350,46 @@ STRICT RULES:
   BAD:  "Good synergy and strong together"
 — BAD pro: "Strong pick with great teamfight synergy and good damage output."
 — GOOD pro: "Sejuani Frost + Renekton W = 3s chain CC"
-— Summoner spells: exactly 2. Follow these role conventions strictly:
-  TOP:     Flash+Teleport (default), Flash+Ignite (kill-threat tops: Darius, Garen, Fiora), Flash+Ghost (some fighters)
-  JUNGLE:  Flash+Smite or Ghost+Smite — ALWAYS Smite. Never skip Smite for jungle.
-  MID:     Flash+Ignite (assassins, aggressive mages), Flash+Barrier (immobile mages vs assassins), Flash+Teleport (scaling mages like Orianna, Viktor)
-  ADC:     Flash+Heal (standard), Flash+Cleanse (vs heavy CC), Ghost+Heal (hypercarries like Jinx, Kog'Maw)
-  SUPPORT: Flash+Exhaust (default for most supports), Flash+Ignite (aggressive engage supports: Leona, Nautilus, Brand, Lux), Flash+Barrier (enchanters: Lulu, Soraka, Janna)
-  NEVER give Smite to non-jungle. NEVER give Teleport to ADC/Support.`;
+— Summoner spells: exactly 2. These are SENSIBLE DEFAULTS by role, not hard rules — the meta shifts and off-meta/flex choices are valid when they fit the pick and matchup:
+  TOP:     usually Flash+Teleport; Flash+Ignite on kill-threat tops (Darius, Garen, Fiora); Flash+Ghost on some fighters
+  JUNGLE:  Flash+Smite or Ghost+Smite — Smite is effectively required for the jungle item, so keep it
+  MID:     Flash+Ignite (assassins, aggressive mages); Flash+Barrier (immobile mages vs assassins); Flash+Teleport (scaling mages like Orianna, Viktor)
+  ADC:     usually Flash+Heal; Flash+Cleanse vs heavy CC; Ghost+Heal on hypercarries — and Teleport DOES see play on some ADCs (side-lane/scaling styles), so don't rule it out if it suits the pick
+  SUPPORT: usually Flash+Exhaust; Flash+Ignite on aggressive engage (Leona, Nautilus, Pyke); Flash+Barrier on enchanters — supports can also run Teleport (e.g. via the summoner-swap rune) when it helps the comp
+  Pick what genuinely fits THIS champion + matchup this patch. When unsure, prefer the common choice, but never force a spell that's clearly wrong for the pick.`;
+  }
+
+  /**
+   * Aggregate the enemy team into a factual damage/threat profile from Riot
+   * class tags. This is the signal that forces suggestions to actually adapt to
+   * the enemy comp instead of returning the same tier-list picks every time.
+   */
+  private buildEnemyProfile(enemyPicks: DraftPick[]): string {
+    const champs = enemyPicks
+      .map((p) => p.champion)
+      .filter((c): c is NonNullable<typeof c> => !!c && Array.isArray(c.tags) && c.tags.length > 0);
+    if (champs.length < 2) return ''; // need a couple of picks to profile a comp
+
+    const names = (pred: (tags: string[]) => boolean) =>
+      champs.filter((c) => pred(c.tags)).map((c) => c.name);
+
+    // Rough damage lean from tags (imperfect but factual enough to steer ranking).
+    const adLeaning = names((t) => t.includes('Marksman') || t.includes('Fighter'));
+    const apLeaning = names((t) => t.includes('Mage'));
+    const assassins = names((t) => t.includes('Assassin'));
+    const tanks = names((t) => t.includes('Tank'));
+    const marksmen = names((t) => t.includes('Marksman'));
+
+    const lines: string[] = [];
+    lines.push(`Damage lean: ~${adLeaning.length} AD-leaning (${adLeaning.join(', ') || '—'}) vs ~${apLeaning.length} AP (${apLeaning.join(', ') || '—'})`);
+    if (assassins.length) lines.push(`Burst/assassin threat: ${assassins.join(', ')} → value peel, tankiness, Zhonya's, QSS`);
+    if (tanks.length) lines.push(`Frontline / engage: ${tanks.join(', ')} → value %-HP damage, kiting, disengage`);
+    if (marksmen.length) lines.push(`Sustained DPS: ${marksmen.join(', ')} → value burst, dive, or hard peel`);
+
+    return `\n=== ENEMY COMP PROFILE (factual — your pick MUST answer THIS specific comp) ===
+${lines.join('\n')}
+ADAPT THE RANKING: mostly AD → armor/AP picks rise; mostly AP → MR / magic-resist bruisers rise; heavy burst → durable & self-peel picks rise; heavy poke → sustain/all-in rise; heavy engage → disengage/flex rise.
+Two DIFFERENT enemy comps must produce DIFFERENT top suggestions — never return the generic tier-list order when the enemy has committed picks.`;
   }
 
   private buildMatchupSection(

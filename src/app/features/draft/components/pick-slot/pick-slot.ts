@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, signal, inject, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, signal, inject, computed, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, distinctUntilChanged } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
@@ -32,6 +32,18 @@ export class PickSlot {
 
   isSearchOpen = signal(false);
   searchTerm = signal('');
+
+  constructor() {
+    // If this slot gets filled while its inline search is open (e.g. the user
+    // clicked a recommendation in the suggestions panel), close the search so
+    // the filled champion renders instead of a stale small-champion grid.
+    effect(() => {
+      if (this.pick().champion && this.isSearchOpen()) {
+        this.isSearchOpen.set(false);
+        this.searchTerm.set('');
+      }
+    });
+  }
 
   private allChampions = toSignal(this.champService.getChampions(), {
     initialValue: [] as Champion[],

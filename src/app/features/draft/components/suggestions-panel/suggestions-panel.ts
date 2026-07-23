@@ -10,6 +10,7 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
 import { BuildService } from '@core/services/build.service';
+import { RunesService } from '@core/services/runes.service';
 import { ChampionsService } from '@core/services/champions.service';
 import { LanguageService } from '@core/services/language.service';
 import { PatchService } from '@core/services/patch.service';
@@ -77,6 +78,7 @@ export class SuggestionsPanel {
   ls = inject(LanguageService);
   private patchService = inject(PatchService);
   private champService = inject(ChampionsService);
+  runes = inject(RunesService);
   private buildService = inject(BuildService);
 
   private rawSuggestions = toSignal(this.store.select(selectSuggestions), {

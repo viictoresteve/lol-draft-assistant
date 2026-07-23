@@ -178,10 +178,27 @@
         <div class="build-section">
           <span class="build-label">{{ ls.T().buildRunes }}</span>
           <div class="build-runes">
-            <span class="rune-keystone">{{ b.runes.keystone }}</span>
-            @for (r of b.runes.primary.slice(1); track r) { <span class="rune-chip">{{ r }}</span> }
-            <span class="rune-sep">·</span>
-            @for (r of b.runes.secondary; track r) { <span class="rune-chip sec">{{ r }}</span> }
+            <div class="rune-line">
+              @if (runes.icon(b.runes.keystone); as ic) {
+                <img class="rune-key-img" [src]="ic" [alt]="b.runes.keystone" [title]="b.runes.keystone" width="30" height="30" appImgFallback />
+              }
+              <span class="rune-keystone">{{ b.runes.keystone }}</span>
+              @for (r of b.runes.primary.slice(1); track r) {
+                @if (runes.icon(r); as ric) {
+                  <img class="rune-img" [src]="ric" [alt]="r" [title]="r" width="20" height="20" appImgFallback />
+                } @else { <span class="rune-chip">{{ r }}</span> }
+              }
+            </div>
+            <div class="rune-line sec-line">
+              @if (runes.icon(b.runes.secondaryTree); as tic) {
+                <img class="rune-tree-img" [src]="tic" [alt]="b.runes.secondaryTree" [title]="b.runes.secondaryTree" width="16" height="16" appImgFallback />
+              }
+              @for (r of b.runes.secondary; track r) {
+                @if (runes.icon(r); as ric) {
+                  <img class="rune-img" [src]="ric" [alt]="r" [title]="r" width="20" height="20" appImgFallback />
+                } @else { <span class="rune-chip sec">{{ r }}</span> }
+              }
+            </div>
           </div>
         </div>
 

@@ -811,11 +811,17 @@
 .build-spells { display: flex; gap: 4px; }
 .build-spells img { border-radius: 4px; border: 1px solid #2a3545; }
 
-.build-runes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.build-runes { display: flex; flex-direction: column; gap: 6px; }
+.rune-line { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.rune-line.sec-line { opacity: 0.9; }
+.rune-key-img {
+  border-radius: 50%; background: #0a0e14;
+  border: 1px solid rgba(224, 176, 80, 0.4); padding: 1px;
+}
+.rune-img { border-radius: 50%; background: #0d1117; }
+.rune-tree-img { border-radius: 50%; opacity: 0.8; margin-right: 2px; }
 .rune-keystone {
   font-size: 0.75rem; font-weight: 700; color: #e0b050;
-  background: rgba(224, 176, 80, 0.1); border: 1px solid rgba(224, 176, 80, 0.25);
-  padding: 3px 8px; border-radius: 4px;
 }
 .rune-chip {
   font-size: 0.6875rem; color: #9aacbc;
@@ -823,7 +829,6 @@
   padding: 2px 7px; border-radius: 4px;
   &.sec { color: #7a8a9a; opacity: 0.85; }
 }
-.rune-sep { color: #3a4a5a; }
 
 .build-combos { display: flex; gap: 6px; flex-wrap: wrap; }
 .combo-chip {
