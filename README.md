@@ -78,7 +78,7 @@ Every game posts to a **global leaderboard** (top 20 per game). Click any entry 
 
 ## Running it locally
 
-**Prerequisites:** Node 20+, and a free AI key from [Google AI Studio](https://aistudio.google.com/apikey) or [Groq](https://console.groq.com/keys).
+**Prerequisites:** Node 24, and a free AI key from [Google AI Studio](https://aistudio.google.com/apikey) or [Groq](https://console.groq.com/keys).
 
 ```bash
 # 1. Install
