@@ -4,6 +4,8 @@
     <p class="pool-subtitle">{{ ls.T().poolSubtitle }}</p>
   </header>
 
+  <app-import-from-riot />
+
   <div class="role-tabs" role="tablist" [attr.aria-label]="ls.T().myRole">
     @for (role of roles; track role) {
       <button

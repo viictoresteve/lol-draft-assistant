@@ -60,6 +60,26 @@ Without it the games work fine — the board just shows "unavailable".
 Scores are stored one sorted set per game (`lb:puzzle`, `lb:abilities`,
 `lb:sounds`), keeping each player's best and the top 20.
 
+## Summoner lookup (optional)
+
+The **"Import from Riot ID"** button on the pool page auto-fills a player's
+champion pool with their most-played champions. It needs a **Riot API key**.
+Without it the button works but shows a friendly "not configured" message.
+
+1. Sign in at **[developer.riotgames.com](https://developer.riotgames.com)** and
+   copy a key:
+   - **Development key** — instant, but **expires every 24h** (fine for testing).
+   - **Personal / Production key** — register an app (a day or two for approval)
+     for a stable key you can leave deployed.
+2. In the Vercel dashboard → **Settings → Environment Variables**, add
+   `RIOT_API_KEY` = your key. Redeploy (`vercel --prod`).
+3. For local dev, set it for the Express proxy too:
+   `RIOT_API_KEY=RGAPI-… npm run proxy:dev`.
+
+The key lives **only** on the server — `/api/summoner` calls Riot's Account-V1
+(Riot ID → puuid) and Champion-Mastery-V4 (top champions). The browser never
+sees it.
+
 ## Notes
 
 - **Data source down?** The app still works; the AI falls back to its own meta

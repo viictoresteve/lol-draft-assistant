@@ -1,0 +1,79 @@
+<div class="riot-import">
+  <div class="ri-head">
+    <h2 class="ri-title">⚡ {{ ls.T().riotImportTitle }}</h2>
+    <p class="ri-hint">{{ ls.T().riotImportHint }}</p>
+  </div>
+
+  <form class="ri-form" (ngSubmit)="onImport()">
+    <input
+      class="ri-input"
+      type="text"
+      name="riotId"
+      [ngModel]="riotId()"
+      (ngModelChange)="riotId.set($event)"
+      [placeholder]="ls.T().riotIdPlaceholder"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+    />
+    <select
+      class="ri-region"
+      name="region"
+      [ngModel]="region()"
+      (ngModelChange)="region.set($event)"
+      [attr.aria-label]="ls.T().riotRegionLabel"
+    >
+      @for (r of regions; track r.id) {
+        <option [value]="r.id">{{ r.label }}</option>
+      }
+    </select>
+    <button class="ri-btn" type="submit" [disabled]="loading() || !riotId().trim()">
+      @if (loading()) { {{ ls.T().riotImporting }} } @else { {{ ls.T().riotImportBtn }} }
+    </button>
+  </form>
+
+  @if (error()) {
+    <p class="ri-error" role="alert">{{ errorText() }}</p>
+  }
+
+  @if (addedCount() !== null) {
+    <p class="ri-success" role="status">✓ {{ addedCount() }} {{ ls.T().riotAddedSuffix }}</p>
+  }
+
+  @if (results().length) {
+    <div class="ri-results">
+      <div class="ri-grid">
+        @for (r of results(); track r.champion.id) {
+          <button
+            type="button"
+            class="ri-card"
+            [class.excluded]="!isIncluded(r.champion.id)"
+            (click)="toggle(r.champion.id)"
+            [attr.aria-pressed]="isIncluded(r.champion.id)"
+            [title]="r.champion.name"
+          >
+            <img class="ri-card-img" [src]="r.champion.image" appImgFallback [alt]="r.champion.name" />
+            <span class="ri-card-name">{{ r.champion.name }}</span>
+            <span class="ri-card-meta">
+              <span [class]="'ri-role role-' + r.role">{{ r.role }}</span>
+              <span class="ri-pts">{{ formatPoints(r.points) }}</span>
+            </span>
+            <span class="ri-check" [class.on]="isIncluded(r.champion.id)">✓</span>
+          </button>
+        }
+      </div>
+
+      <div class="ri-actions">
+        <button
+          type="button"
+          class="ri-add"
+          (click)="addSelected()"
+          [disabled]="selectedCount() === 0"
+        >
+          {{ ls.T().riotAddSelected }} ({{ selectedCount() }})
+        </button>
+        <button type="button" class="ri-clear" (click)="clear()">{{ ls.T().riotClear }}</button>
+      </div>
+    </div>
+  }
+</div>

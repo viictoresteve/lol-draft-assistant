@@ -187,6 +187,57 @@ app.get('/api/counters/:champion', async (req, res) => {
   }
 });
 
+// ── Riot summoner lookup (most-played champions) ────────────────────────────────
+// Mirrors the Vercel /api/summoner function for local dev. Needs RIOT_API_KEY.
+const PLATFORM_CLUSTER: Record<string, string> = {
+  euw1: 'europe', eun1: 'europe', tr1: 'europe', ru: 'europe',
+  na1: 'americas', br1: 'americas', la1: 'americas', la2: 'americas', oc1: 'americas',
+  kr: 'asia', jp1: 'asia',
+};
+
+app.get('/api/summoner', async (req, res) => {
+  const gameName = String(req.query.gameName ?? '').trim();
+  const tagLine = String(req.query.tagLine ?? '').trim().replace(/^#/, '');
+  const region = String(req.query.region ?? 'euw1').toLowerCase();
+  const count = Math.min(30, Math.max(1, Math.round(Number(req.query.count ?? 20)) || 20));
+
+  if (!gameName || !tagLine) { res.status(400).json({ error: 'Missing Riot ID — expected gameName#tagLine' }); return; }
+  const cluster = PLATFORM_CLUSTER[region];
+  if (!cluster) { res.status(400).json({ error: `Unknown region "${region}"` }); return; }
+
+  const key = process.env.RIOT_API_KEY;
+  if (!key) { res.status(501).json({ error: 'Riot lookup not configured on the server', code: 'NO_KEY' }); return; }
+
+  const headers = { 'X-Riot-Token': key };
+  try {
+    const acctRes = await fetch(
+      `https://${cluster}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
+      { headers },
+    );
+    if (acctRes.status === 404) { res.status(404).json({ error: 'Riot ID not found', code: 'NOT_FOUND' }); return; }
+    if (acctRes.status === 401 || acctRes.status === 403) { res.status(502).json({ error: 'Riot API key invalid or expired', code: 'BAD_KEY' }); return; }
+    if (acctRes.status === 429) { res.status(429).json({ error: 'Rate limited by Riot — try again shortly', code: 'RATE' }); return; }
+    if (!acctRes.ok) { res.status(502).json({ error: `Riot account lookup failed (${acctRes.status})` }); return; }
+    const acct = (await acctRes.json()) as { puuid: string; gameName: string; tagLine: string };
+
+    const masRes = await fetch(
+      `https://${region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${acct.puuid}/top?count=${count}`,
+      { headers },
+    );
+    if (masRes.status === 429) { res.status(429).json({ error: 'Rate limited by Riot — try again shortly', code: 'RATE' }); return; }
+    if (!masRes.ok) { res.status(502).json({ error: `Riot mastery lookup failed (${masRes.status})` }); return; }
+    const mastery = (await masRes.json()) as { championId: number; championLevel: number; championPoints: number }[];
+
+    res.json({
+      gameName: acct.gameName, tagLine: acct.tagLine, region,
+      top: mastery.map((m) => ({ championId: m.championId, championLevel: m.championLevel, championPoints: m.championPoints })),
+    });
+  } catch (err) {
+    console.error('[summoner] Error:', (err as Error).message);
+    res.status(502).json({ error: 'Could not reach the Riot API' });
+  }
+});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (_, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
