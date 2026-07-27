@@ -170,14 +170,15 @@ GLOBAL RULES — follow on every response:
       })
       .join('\n');
 
-    // Factual champion classes (from Riot tags) — anchors the model so it can't
+    // Factual champion profiles (Riot data) — anchors the model so it can't
     // misremember a champion's identity (e.g. treat a mage as an AD bruiser).
+    // Includes class + real AD/AP damage lean + range + durability per champion.
     const classRef = [...request.allyPicks, ...request.enemyPicks]
       .map((p) => p.champion)
       .filter((c): c is NonNullable<typeof c> => !!c && Array.isArray(c.tags) && c.tags.length > 0)
-      .map((c) => `${c.name} (${c.tags.join('/')})`)
+      .map((c) => this.describeChampion(c))
       .join(' · ');
-    const classSection = classRef ? `\n=== CHAMPION CLASSES (factual, Riot data) ===\n${classRef}` : '';
+    const classSection = classRef ? `\n=== CHAMPION PROFILES (factual, Riot data) ===\n${classRef}` : '';
 
     // Aggregate the ENEMY composition into a factual profile the pick must answer.
     // This is the key signal that makes suggestions vary with the enemy comp
@@ -370,18 +371,26 @@ STRICT RULES:
       .filter((c): c is NonNullable<typeof c> => !!c && Array.isArray(c.tags) && c.tags.length > 0);
     if (champs.length < 2) return ''; // need a couple of picks to profile a comp
 
-    const names = (pred: (tags: string[]) => boolean) =>
-      champs.filter((c) => pred(c.tags)).map((c) => c.name);
+    const names = (pred: (c: Champion) => boolean) => champs.filter(pred).map((c) => c.name);
 
-    // Rough damage lean from tags (imperfect but factual enough to steer ranking).
-    const adLeaning = names((t) => t.includes('Marksman') || t.includes('Fighter'));
-    const apLeaning = names((t) => t.includes('Mage'));
-    const assassins = names((t) => t.includes('Assassin'));
-    const tanks = names((t) => t.includes('Tank'));
-    const marksmen = names((t) => t.includes('Marksman'));
+    // Damage lean from Riot's attack/magic ratings when available (far more
+    // accurate than tags — e.g. Rumble is a Fighter but deals magic damage).
+    const adLeaning = names((c) => this.damageLean(c) === 'AD');
+    const apLeaning = names((c) => this.damageLean(c) === 'AP');
+    const assassins = names((c) => c.tags.includes('Assassin'));
+    const tanks = names((c) => c.tags.includes('Tank') || (c.factors?.defense ?? 0) >= 7);
+    const marksmen = names((c) => c.tags.includes('Marksman'));
+    const ranged = names((c) => (c.factors?.attackRange ?? 0) >= 400);
+    const meleeCount = champs.length - ranged.length;
+
+    const rangeVerdict =
+      ranged.length >= 3 ? 'poke/siege-leaning, hard to all-in — value engage/gapclose or waveclear'
+      : meleeCount >= 3 ? 'commit/dive-leaning, must walk up — value disengage, kiting, poke'
+      : 'balanced range';
 
     const lines: string[] = [];
-    lines.push(`Damage lean: ~${adLeaning.length} AD-leaning (${adLeaning.join(', ') || '—'}) vs ~${apLeaning.length} AP (${apLeaning.join(', ') || '—'})`);
+    lines.push(`Damage lean: ${adLeaning.length} AD (${adLeaning.join(', ') || '—'}) vs ${apLeaning.length} AP (${apLeaning.join(', ') || '—'}) → itemize the resist they force`);
+    lines.push(`Range profile: ${ranged.length} ranged (${ranged.join(', ') || '—'}) vs ${meleeCount} melee → ${rangeVerdict}`);
     if (assassins.length) lines.push(`Burst/assassin threat: ${assassins.join(', ')} → value peel, tankiness, Zhonya's, QSS`);
     if (tanks.length) lines.push(`Frontline / engage: ${tanks.join(', ')} → value %-HP damage, kiting, disengage`);
     if (marksmen.length) lines.push(`Sustained DPS: ${marksmen.join(', ')} → value burst, dive, or hard peel`);
@@ -390,6 +399,41 @@ STRICT RULES:
 ${lines.join('\n')}
 ADAPT THE RANKING: mostly AD → armor/AP picks rise; mostly AP → MR / magic-resist bruisers rise; heavy burst → durable & self-peel picks rise; heavy poke → sustain/all-in rise; heavy engage → disengage/flex rise.
 Two DIFFERENT enemy comps must produce DIFFERENT top suggestions — never return the generic tier-list order when the enemy has committed picks.`;
+  }
+
+  /**
+   * Real AD/AP lean from Riot's per-champion attack/magic ratings (0–10),
+   * falling back to class tags when factors are missing. More reliable than
+   * tags alone — a Fighter can be magic (Rumble) and a Mage can be AD-hybrid.
+   */
+  private damageLean(c: Champion): 'AD' | 'AP' | 'mixed dmg' {
+    const f = c.factors;
+    if (f && (f.attack || f.magic)) {
+      if (f.attack >= f.magic + 2) return 'AD';
+      if (f.magic >= f.attack + 2) return 'AP';
+      return 'mixed dmg';
+    }
+    if (c.tags.includes('Mage')) return 'AP';
+    if (c.tags.includes('Marksman') || c.tags.includes('Fighter') || c.tags.includes('Assassin')) return 'AD';
+    return 'mixed dmg';
+  }
+
+  /**
+   * Compact factual descriptor for one champion, fed into the prompt so the AI
+   * reasons on Riot data instead of memory: class + damage lean + range +
+   * durability (+ resource when notable). Auto-updates each patch via DDragon.
+   */
+  private describeChampion(c: Champion): string {
+    const traits: string[] = [c.tags.join('/')];
+    const f = c.factors;
+    if (f) {
+      traits.push(this.damageLean(c));
+      traits.push(f.attackRange >= 400 ? `ranged ${f.attackRange}` : 'melee');
+      if (f.defense >= 7) traits.push('durable');
+      else if (f.defense <= 3) traits.push('squishy');
+      if (f.resource === 'None' || f.resource === 'Energy') traits.push(f.resource.toLowerCase());
+    }
+    return `${c.name} (${traits.filter(Boolean).join(', ')})`;
   }
 
   private buildMatchupSection(

@@ -5,13 +5,16 @@ import { Champion, ChampionTag } from '@shared/models/champion.interface';
 import { PatchService } from '@core/services/patch.service';
 import { retryBackoff } from '@core/util/retry-backoff';
 
-/** Shape of the entries in DDragon's champion.json */
+/** Shape of the entries in DDragon's champion.json (only the fields we use). */
 interface DDragonChampion {
   id: string;
   key: string;
   name: string;
   title: string;
   tags: ChampionTag[];
+  partype: string;
+  info: { attack: number; defense: number; magic: number; difficulty: number };
+  stats: { attackrange: number };
 }
 interface DDragonChampionList {
   data: Record<string, DDragonChampion>;
@@ -56,6 +59,13 @@ export class ChampionsService {
       title: champ.title,
       image: `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champ.id}.png`,
       tags: champ.tags,
+      factors: {
+        attack: champ.info?.attack ?? 0,
+        magic: champ.info?.magic ?? 0,
+        defense: champ.info?.defense ?? 0,
+        attackRange: champ.stats?.attackrange ?? 0,
+        resource: champ.partype ?? '',
+      },
     }));
   }
 }
