@@ -142,6 +142,7 @@ export class ImportFromRiot {
       case 'NO_KEY': return t.riotErrNoKey;
       case 'NOT_FOUND': return t.riotErrNotFound;
       case 'RATE': return t.riotErrRate;
+      case 'BAD_KEY': return t.riotErrBadKey;
       case 'BAD_INPUT': return t.riotIdInvalid;
       default: return t.riotErrGeneric;
     }

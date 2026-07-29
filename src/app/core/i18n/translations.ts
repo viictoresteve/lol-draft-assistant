@@ -68,6 +68,7 @@ export const TRANSLATIONS = {
     riotErrNoKey: "Riot lookup isn't set up on the server yet.",
     riotErrNotFound: 'Riot ID not found — check the name, tag and region.',
     riotErrRate: 'Too many requests — wait a moment and retry.',
+    riotErrBadKey: 'The Riot API key is invalid or expired (dev keys last 24h). Get a fresh one and redeploy.',
     riotErrGeneric: 'Something went wrong. Please try again.',
     // Settings / share
     settings: 'Settings',
@@ -268,6 +269,7 @@ export const TRANSLATIONS = {
     riotErrNoKey: 'El buscador de invocador aún no está configurado en el servidor.',
     riotErrNotFound: 'Riot ID no encontrado — revisa nombre, tag y región.',
     riotErrRate: 'Demasiadas peticiones — espera un momento y reintenta.',
+    riotErrBadKey: 'La Riot API key no es válida o ha caducado (las de dev duran 24h). Saca una nueva y vuelve a desplegar.',
     riotErrGeneric: 'Algo salió mal. Inténtalo de nuevo.',
     // Settings / share
     settings: 'Ajustes',
