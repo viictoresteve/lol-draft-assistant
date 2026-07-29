@@ -14,6 +14,8 @@ import { RunesService } from '@core/services/runes.service';
 import { ChampionsService } from '@core/services/champions.service';
 import { LanguageService } from '@core/services/language.service';
 import { PatchService } from '@core/services/patch.service';
+import { PlayerProfileService } from '@core/services/player-profile.service';
+import { ProfileChampion } from '@core/services/riot.service';
 import {
   ChampionTip,
   ChampionTipType,
@@ -80,6 +82,12 @@ export class SuggestionsPanel {
   private champService = inject(ChampionsService);
   runes = inject(RunesService);
   private buildService = inject(BuildService);
+  private playerProfile = inject(PlayerProfileService);
+
+  /** The player's own recent record on a suggested champion, if they've played it. */
+  myRecord(champion: Champion): ProfileChampion | undefined {
+    return this.playerProfile.recordForName(champion.id);
+  }
 
   private rawSuggestions = toSignal(this.store.select(selectSuggestions), {
     initialValue: [] as Suggestion[],

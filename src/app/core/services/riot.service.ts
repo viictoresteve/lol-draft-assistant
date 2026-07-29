@@ -17,7 +17,7 @@ export interface SummonerLookup {
   top: RiotTopChampion[];
 }
 
-/** Ranked-ladder standing for a player (from League-V4). */
+/** Ranked-ladder standing for one queue (from League-V4). */
 export interface RankInfo {
   queue: string;   // 'Solo/Duo' | 'Flex'
   tier: string;    // GOLD, PLATINUM…
@@ -25,6 +25,7 @@ export interface RankInfo {
   lp: number;
   wins: number;
   losses: number;
+  winRate: number; // 0–100, over the whole ranked split
 }
 
 /** Per-champion record from recent ranked games (Match-V5). */
@@ -41,7 +42,7 @@ export interface PlayerProfile {
   gameName: string;
   tagLine: string;
   region: string;
-  rank: RankInfo | null;
+  ranks: RankInfo[]; // Solo/Duo and/or Flex; empty when unranked
   roles: { role: string; games: number }[];
   champions: ProfileChampion[];
   sampleSize: number;

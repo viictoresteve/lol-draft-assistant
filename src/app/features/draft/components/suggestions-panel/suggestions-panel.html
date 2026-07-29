@@ -307,6 +307,10 @@
                 <span class="champ-name" [class.in-pool]="s.isInPool">{{ s.champion.name }}</span>
                 @if (s.isInPool) { <span class="pool-star" aria-label="In your pool">★</span> }
                 @if (s.tierInfo) { <span class="tier-badge">{{ s.tierInfo }}</span> }
+                @if (myRecord(s.champion); as rec) {
+                  <span class="my-wr" [class.good]="rec.winRate >= 50"
+                    [title]="ls.T().riotYourRecent">{{ ls.T().riotYou }} {{ rec.winRate }}% ({{ rec.games }}g)</span>
+                }
               </div>
               @if (s.summonerSpells.length) {
                 <div class="spells" aria-label="Summoner spells">

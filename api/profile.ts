@@ -65,8 +65,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!acctRes.ok) { res.status(502).json({ error: `Riot account lookup failed (${acctRes.status})` }); return; }
     const acct = (await acctRes.json()) as { puuid: string; gameName: string; tagLine: string };
 
-    // 2) rank (League-V4 by puuid) — best-effort, unranked players just have none
-    const rank = await fetchRank(region, acct.puuid, headers);
+    // 2) ranks (League-V4 by puuid) — both queues, best-effort (empty if unranked)
+    const ranks = await fetchRanks(region, acct.puuid, headers);
 
     // 3) recent ranked matches → role split + per-champ W/L
     const idsRes = await fetch(
@@ -119,7 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       gameName: acct.gameName,
       tagLine: acct.tagLine,
       region,
-      rank,
+      ranks,
       roles,
       champions,
       sampleSize: analyzed,
@@ -129,32 +129,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-/** Solo-queue rank (falls back to flex), or null when unranked / on error. */
-async function fetchRank(
+interface RankOut {
+  queue: string; tier: string; division: string; lp: number;
+  wins: number; losses: number; winRate: number;
+}
+
+/** Both ranked queues (Solo/Duo + Flex) with per-queue win rate; [] if unranked. */
+async function fetchRanks(
   region: string,
   puuid: string,
   headers: Record<string, string>,
-): Promise<{ queue: string; tier: string; division: string; lp: number; wins: number; losses: number } | null> {
+): Promise<RankOut[]> {
   try {
     const r = await fetch(
       `https://${region}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`,
       { headers },
     );
-    if (!r.ok) return null;
+    if (!r.ok) return [];
     const entries = (await r.json()) as LeagueEntry[];
-    const solo = entries.find((e) => e.queueType === 'RANKED_SOLO_5x5');
-    const flex = entries.find((e) => e.queueType === 'RANKED_FLEX_SR');
-    const e = solo ?? flex;
-    if (!e) return null;
-    return {
-      queue: e.queueType === 'RANKED_SOLO_5x5' ? 'Solo/Duo' : 'Flex',
-      tier: e.tier,
-      division: e.rank,
-      lp: e.leaguePoints,
-      wins: e.wins,
-      losses: e.losses,
-    };
+    const out: RankOut[] = [];
+    for (const [queueType, label] of [
+      ['RANKED_SOLO_5x5', 'Solo/Duo'],
+      ['RANKED_FLEX_SR', 'Flex'],
+    ] as const) {
+      const e = entries.find((x) => x.queueType === queueType);
+      if (!e) continue;
+      const played = e.wins + e.losses;
+      out.push({
+        queue: label,
+        tier: e.tier,
+        division: e.rank,
+        lp: e.leaguePoints,
+        wins: e.wins,
+        losses: e.losses,
+        winRate: played ? Math.round((e.wins / played) * 100) : 0,
+      });
+    }
+    return out;
   } catch {
-    return null;
+    return [];
   }
 }

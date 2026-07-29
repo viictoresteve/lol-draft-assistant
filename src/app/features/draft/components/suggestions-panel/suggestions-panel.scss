@@ -222,6 +222,25 @@
   flex-shrink: 0;
 }
 
+/* Personal recent win rate on a suggested champion */
+.my-wr {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #e06060;
+  background: rgba(224, 96, 96, 0.08);
+  border: 1px solid rgba(224, 96, 96, 0.18);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.good {
+    color: #0ac8b9;
+    background: rgba(10, 200, 185, 0.08);
+    border-color: rgba(10, 200, 185, 0.2);
+  }
+}
+
 .spells {
   display: flex;
   gap: 3px;

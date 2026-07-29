@@ -228,6 +228,22 @@
   border-radius: 5px;
 }
 
+.ri-ranks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ri-queue {
+  display: inline-block;
+  min-width: 58px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #7a7a7a;
+}
+
 .ri-rank {
   font-size: 0.8rem;
   font-weight: 700;

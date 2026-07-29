@@ -270,14 +270,18 @@ app.get('/api/profile', async (req, res) => {
     if (!acctRes.ok) { res.status(502).json({ error: `Riot account lookup failed (${acctRes.status})` }); return; }
     const acct = (await acctRes.json()) as { puuid: string; gameName: string; tagLine: string };
 
-    // Rank (best-effort)
-    let rank: unknown = null;
+    // Ranks (both queues, best-effort)
+    const ranks: { queue: string; tier: string; division: string; lp: number; wins: number; losses: number; winRate: number }[] = [];
     try {
       const lr = await fetch(`https://${region}.api.riotgames.com/lol/league/v4/entries/by-puuid/${acct.puuid}`, { headers });
       if (lr.ok) {
         const entries = (await lr.json()) as { queueType: string; tier: string; rank: string; leaguePoints: number; wins: number; losses: number }[];
-        const e = entries.find((x) => x.queueType === 'RANKED_SOLO_5x5') ?? entries.find((x) => x.queueType === 'RANKED_FLEX_SR');
-        if (e) rank = { queue: e.queueType === 'RANKED_SOLO_5x5' ? 'Solo/Duo' : 'Flex', tier: e.tier, division: e.rank, lp: e.leaguePoints, wins: e.wins, losses: e.losses };
+        for (const [queueType, label] of [['RANKED_SOLO_5x5', 'Solo/Duo'], ['RANKED_FLEX_SR', 'Flex']] as const) {
+          const e = entries.find((x) => x.queueType === queueType);
+          if (!e) continue;
+          const played = e.wins + e.losses;
+          ranks.push({ queue: label, tier: e.tier, division: e.rank, lp: e.leaguePoints, wins: e.wins, losses: e.losses, winRate: played ? Math.round((e.wins / played) * 100) : 0 });
+        }
       }
     } catch { /* unranked / ignore */ }
 
@@ -313,7 +317,7 @@ app.get('/api/profile', async (req, res) => {
     }
 
     res.json({
-      gameName: acct.gameName, tagLine: acct.tagLine, region, rank,
+      gameName: acct.gameName, tagLine: acct.tagLine, region, ranks,
       roles: [...roleGames.entries()].map(([role, games]) => ({ role, games })).sort((a, b) => b.games - a.games),
       champions: [...champStats.entries()].map(([championName, s]) => ({
         championId: s.championId, championName, games: s.games, wins: s.wins,

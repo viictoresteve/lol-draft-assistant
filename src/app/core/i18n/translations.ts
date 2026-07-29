@@ -73,6 +73,8 @@ export const TRANSLATIONS = {
     riotUnranked: 'Unranked',
     riotRankedGames: 'ranked',
     riotRoles: 'Roles',
+    riotYou: 'You:',
+    riotYourRecent: 'Your recent win rate on this champion',
     // Settings / share
     settings: 'Settings',
     settingsTitle: 'Settings',
@@ -277,6 +279,8 @@ export const TRANSLATIONS = {
     riotUnranked: 'Sin rango',
     riotRankedGames: 'ranked',
     riotRoles: 'Roles',
+    riotYou: 'Tú:',
+    riotYourRecent: 'Tu winrate reciente con este campeón',
     // Settings / share
     settings: 'Ajustes',
     settingsTitle: 'Ajustes',

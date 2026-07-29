@@ -5,9 +5,11 @@ import { catchError, forkJoin, of } from 'rxjs';
 
 import { ChampionsService } from '@core/services/champions.service';
 import { LanguageService } from '@core/services/language.service';
+import { PlayerProfileService } from '@core/services/player-profile.service';
 import {
   PlayerProfile,
   ProfileChampion,
+  RankInfo,
   RiotLookupError,
   RiotService,
   RIOT_REGIONS,
@@ -45,6 +47,7 @@ export class ImportFromRiot {
   private champService = inject(ChampionsService);
   private tierList = inject(TierListService);
   private store = inject(Store);
+  private playerProfile = inject(PlayerProfileService);
 
   readonly regions = RIOT_REGIONS;
 
@@ -87,7 +90,10 @@ export class ImportFromRiot {
     // match-history based) and enrich the card/mains as soon as they arrive —
     // a profile failure never blocks the fast mastery-based mains grid.
     this.riot.getProfile(gameName, tagLine, this.region()).subscribe({
-      next: (p) => this.profile.set(p),
+      next: (p) => {
+        this.profile.set(p);
+        this.playerProfile.set(p); // share app-wide so the draft AI can personalise
+      },
       error: () => this.profile.set(null),
     });
 
@@ -162,12 +168,10 @@ export class ImportFromRiot {
     return champion.key ? this.profileByChampId().get(Number(champion.key)) : undefined;
   }
 
-  /** "Platinum II · 47 LP" for the rank badge. */
-  rankLabel(): string {
-    const r = this.profile()?.rank;
-    if (!r) return this.ls.T().riotUnranked;
-    const tier = r.tier.charAt(0) + r.tier.slice(1).toLowerCase();
-    return `${tier} ${r.division} · ${r.lp} LP`;
+  /** "Platinum II · 47 LP" for one queue's rank badge. */
+  tierLabel(rank: RankInfo): string {
+    const tier = rank.tier.charAt(0) + rank.tier.slice(1).toLowerCase();
+    return `${tier} ${rank.division} · ${rank.lp} LP`;
   }
 
   /** Role split as [{ role, pct }] over the analysed games (desc). */

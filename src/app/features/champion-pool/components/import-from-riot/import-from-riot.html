@@ -42,10 +42,18 @@
 
   @if (profile(); as p) {
     <div class="ri-profile">
-      <span class="ri-rank" [class]="'tier-' + (p.rank?.tier ?? 'none').toLowerCase()">
-        {{ rankLabel() }}
-        @if (p.rank) { <span class="ri-wl">· {{ p.rank.wins }}W {{ p.rank.losses }}L</span> }
-      </span>
+      <div class="ri-ranks">
+        @for (rk of p.ranks; track rk.queue) {
+          <span class="ri-rank" [class]="'tier-' + rk.tier.toLowerCase()">
+            <span class="ri-queue">{{ rk.queue }}</span>
+            {{ tierLabel(rk) }}
+            <span class="ri-wl">· {{ rk.winRate }}% ({{ rk.wins }}W {{ rk.losses }}L)</span>
+          </span>
+        }
+        @if (!p.ranks.length) {
+          <span class="ri-rank tier-none">{{ ls.T().riotUnranked }}</span>
+        }
+      </div>
       @if (roleSplit().length) {
         <span class="ri-rolesplit" [attr.aria-label]="ls.T().riotRoles">
           @for (rs of roleSplit(); track rs.role) {
