@@ -214,3 +214,77 @@
 
   &:hover { border-color: #785a28; color: #c8aa6e; }
 }
+
+/* ── Profile card (rank + role split) ── */
+.ri-profile {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #0d1117;
+  border: 1px solid #2a2f36;
+  border-radius: 5px;
+}
+
+.ri-rank {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #c89b3c;
+
+  // Tier accents
+  &.tier-iron     { color: #8a8a8a; }
+  &.tier-bronze   { color: #b56a3c; }
+  &.tier-silver   { color: #9fb0c0; }
+  &.tier-gold     { color: #e0a940; }
+  &.tier-platinum { color: #3fbfa0; }
+  &.tier-emerald  { color: #35c46a; }
+  &.tier-diamond  { color: #6aaaff; }
+  &.tier-master   { color: #c86af0; }
+  &.tier-grandmaster { color: #e0605a; }
+  &.tier-challenger  { color: #4ad0ff; }
+  &.tier-none     { color: #6a6a6a; font-weight: 600; }
+}
+
+.ri-wl {
+  color: #7a7a7a;
+  font-weight: 400;
+  font-size: 0.72rem;
+}
+
+.ri-rolesplit {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ri-rs {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+
+  &.role-top     { color: #ffaaaa; background: #3a2020; }
+  &.role-jungle  { color: #aaffaa; background: #1c331c; }
+  &.role-mid     { color: #aaaaff; background: #20203a; }
+  &.role-adc     { color: #ffd580; background: #33291a; }
+  &.role-support { color: #80d4d4; background: #1c3333; }
+}
+
+.ri-sample {
+  font-size: 0.68rem;
+  color: #6a6a6a;
+  margin-left: auto;
+}
+
+/* Recent win-rate badge on a main card */
+.ri-wr {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #e06060;
+
+  &.good { color: #0ac8b9; }
+}

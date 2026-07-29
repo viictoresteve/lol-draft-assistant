@@ -70,6 +70,9 @@ export const TRANSLATIONS = {
     riotErrRate: 'Too many requests — wait a moment and retry.',
     riotErrBadKey: 'The Riot API key is invalid or expired (dev keys last 24h). Get a fresh one and redeploy.',
     riotErrGeneric: 'Something went wrong. Please try again.',
+    riotUnranked: 'Unranked',
+    riotRankedGames: 'ranked',
+    riotRoles: 'Roles',
     // Settings / share
     settings: 'Settings',
     settingsTitle: 'Settings',
@@ -271,6 +274,9 @@ export const TRANSLATIONS = {
     riotErrRate: 'Demasiadas peticiones — espera un momento y reintenta.',
     riotErrBadKey: 'La Riot API key no es válida o ha caducado (las de dev duran 24h). Saca una nueva y vuelve a desplegar.',
     riotErrGeneric: 'Algo salió mal. Inténtalo de nuevo.',
+    riotUnranked: 'Sin rango',
+    riotRankedGames: 'ranked',
+    riotRoles: 'Roles',
     // Settings / share
     settings: 'Ajustes',
     settingsTitle: 'Ajustes',

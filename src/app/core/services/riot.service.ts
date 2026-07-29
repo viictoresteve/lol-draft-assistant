@@ -17,6 +17,36 @@ export interface SummonerLookup {
   top: RiotTopChampion[];
 }
 
+/** Ranked-ladder standing for a player (from League-V4). */
+export interface RankInfo {
+  queue: string;   // 'Solo/Duo' | 'Flex'
+  tier: string;    // GOLD, PLATINUM…
+  division: string; // I–IV
+  lp: number;
+  wins: number;
+  losses: number;
+}
+
+/** Per-champion record from recent ranked games (Match-V5). */
+export interface ProfileChampion {
+  championId: number;
+  championName: string;
+  games: number;
+  wins: number;
+  winRate: number; // 0–100
+}
+
+/** Rich player profile: rank + real role split + per-champ win rates. */
+export interface PlayerProfile {
+  gameName: string;
+  tagLine: string;
+  region: string;
+  rank: RankInfo | null;
+  roles: { role: string; games: number }[];
+  champions: ProfileChampion[];
+  sampleSize: number;
+}
+
 /** A failed lookup, normalised to a machine-readable code the UI can branch on. */
 export interface RiotLookupError {
   code: 'NO_KEY' | 'NOT_FOUND' | 'BAD_KEY' | 'RATE' | 'BAD_INPUT' | 'UNKNOWN';
@@ -59,6 +89,18 @@ export class RiotService {
         map((res) => res.top ?? []),
         catchError((err: HttpErrorResponse) => throwError(() => this.normalise(err))),
       );
+  }
+
+  /** Rich profile (rank + real roles + per-champ win rate) from ranked history. */
+  getProfile(gameName: string, tagLine: string, region: string): Observable<PlayerProfile> {
+    const params = new HttpParams()
+      .set('gameName', gameName)
+      .set('tagLine', tagLine)
+      .set('region', region);
+
+    return this.http
+      .get<PlayerProfile>(`${environment.proxyUrl}/api/profile`, { params })
+      .pipe(catchError((err: HttpErrorResponse) => throwError(() => this.normalise(err))));
   }
 
   private normalise(err: HttpErrorResponse): RiotLookupError {

@@ -5,7 +5,13 @@ import { catchError, forkJoin, of } from 'rxjs';
 
 import { ChampionsService } from '@core/services/champions.service';
 import { LanguageService } from '@core/services/language.service';
-import { RiotLookupError, RiotService, RIOT_REGIONS } from '@core/services/riot.service';
+import {
+  PlayerProfile,
+  ProfileChampion,
+  RiotLookupError,
+  RiotService,
+  RIOT_REGIONS,
+} from '@core/services/riot.service';
 import { ChampionTierEntry, TierListService } from '@core/services/tier-list.service';
 import { DraftRole } from '@features/draft/models/draft.interface';
 import { ImgFallbackDirective } from '@shared/directives/img-fallback.directive';
@@ -49,9 +55,15 @@ export class ImportFromRiot {
   results = signal<ImportResult[]>([]);
   excluded = signal<Set<string>>(new Set());
   addedCount = signal<number | null>(null);
+  profile = signal<PlayerProfile | null>(null);
 
   selectedCount = computed(
     () => this.results().filter((r) => !this.excluded().has(r.champion.id)).length,
+  );
+
+  // Fast lookup of a champion's recent win rate, keyed by numeric DDragon id.
+  private profileByChampId = computed(
+    () => new Map((this.profile()?.champions ?? []).map((c) => [c.championId, c])),
   );
 
   onImport() {
@@ -69,6 +81,15 @@ export class ImportFromRiot {
     this.results.set([]);
     this.excluded.set(new Set());
     this.addedCount.set(null);
+    this.profile.set(null);
+
+    // Rank + real role split + per-champ win rate load in parallel (heavier,
+    // match-history based) and enrich the card/mains as soon as they arrive —
+    // a profile failure never blocks the fast mastery-based mains grid.
+    this.riot.getProfile(gameName, tagLine, this.region()).subscribe({
+      next: (p) => this.profile.set(p),
+      error: () => this.profile.set(null),
+    });
 
     forkJoin({
       top: this.riot.getTopChampions(gameName, tagLine, this.region()),
@@ -126,6 +147,7 @@ export class ImportFromRiot {
     this.results.set([]);
     this.error.set(null);
     this.addedCount.set(null);
+    this.profile.set(null);
   }
 
   /** "1,234,567" → "1.2M", "45,000" → "45K" */
@@ -133,6 +155,27 @@ export class ImportFromRiot {
     if (points >= 1_000_000) return `${(points / 1_000_000).toFixed(1)}M`;
     if (points >= 1_000) return `${Math.round(points / 1_000)}K`;
     return String(points);
+  }
+
+  /** Recent win-rate record for a pool champion, or undefined if not played. */
+  wrFor(champion: Champion): ProfileChampion | undefined {
+    return champion.key ? this.profileByChampId().get(Number(champion.key)) : undefined;
+  }
+
+  /** "Platinum II · 47 LP" for the rank badge. */
+  rankLabel(): string {
+    const r = this.profile()?.rank;
+    if (!r) return this.ls.T().riotUnranked;
+    const tier = r.tier.charAt(0) + r.tier.slice(1).toLowerCase();
+    return `${tier} ${r.division} · ${r.lp} LP`;
+  }
+
+  /** Role split as [{ role, pct }] over the analysed games (desc). */
+  roleSplit(): { role: string; pct: number }[] {
+    const roles = this.profile()?.roles ?? [];
+    const total = roles.reduce((sum, r) => sum + r.games, 0);
+    if (!total) return [];
+    return roles.map((r) => ({ role: r.role, pct: Math.round((r.games / total) * 100) }));
   }
 
   /** Localised message for the current error code. */

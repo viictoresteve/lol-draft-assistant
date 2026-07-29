@@ -40,6 +40,25 @@
     <p class="ri-success" role="status">✓ {{ addedCount() }} {{ ls.T().riotAddedSuffix }}</p>
   }
 
+  @if (profile(); as p) {
+    <div class="ri-profile">
+      <span class="ri-rank" [class]="'tier-' + (p.rank?.tier ?? 'none').toLowerCase()">
+        {{ rankLabel() }}
+        @if (p.rank) { <span class="ri-wl">· {{ p.rank.wins }}W {{ p.rank.losses }}L</span> }
+      </span>
+      @if (roleSplit().length) {
+        <span class="ri-rolesplit" [attr.aria-label]="ls.T().riotRoles">
+          @for (rs of roleSplit(); track rs.role) {
+            <span [class]="'ri-rs role-' + rs.role">{{ rs.role }} {{ rs.pct }}%</span>
+          }
+        </span>
+      }
+      @if (p.sampleSize) {
+        <span class="ri-sample">{{ p.sampleSize }} {{ ls.T().riotRankedGames }}</span>
+      }
+    </div>
+  }
+
   @if (results().length) {
     <div class="ri-results">
       <div class="ri-grid">
@@ -58,6 +77,9 @@
               <span [class]="'ri-role role-' + r.role">{{ r.role }}</span>
               <span class="ri-pts">{{ formatPoints(r.points) }}</span>
             </span>
+            @if (wrFor(r.champion); as wr) {
+              <span class="ri-wr" [class.good]="wr.winRate >= 50">{{ wr.winRate }}% · {{ wr.games }}g</span>
+            }
             <span class="ri-check" [class.on]="isIncluded(r.champion.id)">✓</span>
           </button>
         }
