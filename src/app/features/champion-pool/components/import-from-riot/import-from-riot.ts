@@ -28,6 +28,16 @@ interface ImportResult {
   points: number;
 }
 
+/** A remembered Riot ID lookup, shown as a clickable chip. */
+interface SearchEntry {
+  gameName: string;
+  tagLine: string;
+  region: string;
+}
+
+const HISTORY_KEY = 'lol-riot-search-history';
+const HISTORY_MAX = 6;
+
 /**
  * Enter a Riot ID → fetch the player's most-played champions (mastery) and
  * offer to add them to the pool. Each champion's role is detected from the
@@ -59,6 +69,7 @@ export class ImportFromRiot {
   excluded = signal<Set<string>>(new Set());
   addedCount = signal<number | null>(null);
   profile = signal<PlayerProfile | null>(null);
+  history = signal<SearchEntry[]>(this.loadHistory());
 
   selectedCount = computed(
     () => this.results().filter((r) => !this.excluded().has(r.champion.id)).length,
@@ -118,6 +129,7 @@ export class ImportFromRiot {
 
         this.results.set(results);
         this.loading.set(false);
+        this.pushHistory({ gameName, tagLine, region: this.region() });
         if (results.length === 0) this.error.set({ code: 'NOT_FOUND', message: 'No champions' });
       },
       error: (e: RiotLookupError) => {
@@ -154,6 +166,47 @@ export class ImportFromRiot {
     this.error.set(null);
     this.addedCount.set(null);
     this.profile.set(null);
+  }
+
+  // ── Search history ──────────────────────────────────────────────────────────
+
+  /** Re-run a remembered lookup with one click. */
+  useHistory(entry: SearchEntry) {
+    this.riotId.set(`${entry.gameName}#${entry.tagLine}`);
+    this.region.set(entry.region);
+    this.onImport();
+  }
+
+  removeHistory(entry: SearchEntry, event: Event) {
+    event.stopPropagation();
+    this.saveHistory(this.history().filter((e) => this.entryKey(e) !== this.entryKey(entry)));
+  }
+
+  private pushHistory(entry: SearchEntry) {
+    const deduped = [entry, ...this.history().filter((e) => this.entryKey(e) !== this.entryKey(entry))];
+    this.saveHistory(deduped.slice(0, HISTORY_MAX));
+  }
+
+  private entryKey(e: SearchEntry): string {
+    return `${e.gameName.toLowerCase()}#${e.tagLine.toLowerCase()}#${e.region}`;
+  }
+
+  private loadHistory(): SearchEntry[] {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? (JSON.parse(raw) as SearchEntry[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveHistory(list: SearchEntry[]) {
+    this.history.set(list);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    } catch {
+      /* storage unavailable — chips still work for this session */
+    }
   }
 
   /** "1,234,567" → "1.2M", "45,000" → "45K" */

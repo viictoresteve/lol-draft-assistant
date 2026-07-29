@@ -1,6 +1,20 @@
 <div class="pool-page">
   <header class="pool-header">
-    <h1 class="pool-title">{{ ls.T().poolTitle }}</h1>
+    <div class="pool-header-row">
+      <h1 class="pool-title">{{ ls.T().poolTitle }}</h1>
+      @if (poolCount() > 0) {
+        @if (!confirmingClear()) {
+          <button type="button" class="pool-clear-btn" (click)="clearPool()">
+            🗑 {{ ls.T().poolClear }} ({{ poolCount() }})
+          </button>
+        } @else {
+          <span class="pool-clear-confirm">
+            <button type="button" class="pool-clear-yes" (click)="clearPool()">{{ ls.T().poolClearConfirm }}</button>
+            <button type="button" class="pool-clear-no" (click)="cancelClear()">{{ ls.T().cancel }}</button>
+          </span>
+        }
+      }
+    </div>
     <p class="pool-subtitle">{{ ls.T().poolSubtitle }}</p>
   </header>
 

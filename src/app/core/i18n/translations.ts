@@ -75,6 +75,10 @@ export const TRANSLATIONS = {
     riotRoles: 'Roles',
     riotYou: 'You:',
     riotYourRecent: 'Your recent win rate on this champion',
+    poolClear: 'Clear pool',
+    poolClearConfirm: 'Confirm — clear all',
+    cancel: 'Cancel',
+    riotRecent: 'Recent',
     // Settings / share
     settings: 'Settings',
     settingsTitle: 'Settings',
@@ -281,6 +285,10 @@ export const TRANSLATIONS = {
     riotRoles: 'Roles',
     riotYou: 'Tú:',
     riotYourRecent: 'Tu winrate reciente con este campeón',
+    poolClear: 'Vaciar pool',
+    poolClearConfirm: 'Confirmar — vaciar todo',
+    cancel: 'Cancelar',
+    riotRecent: 'Recientes',
     // Settings / share
     settings: 'Ajustes',
     settingsTitle: 'Ajustes',

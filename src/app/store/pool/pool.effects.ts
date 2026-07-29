@@ -41,7 +41,7 @@ export class PoolEffects {
   savePool$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(PoolActions.addToPool, PoolActions.removeFromPool),
+        ofType(PoolActions.addToPool, PoolActions.removeFromPool, PoolActions.clearPool),
         withLatestFrom(this.store.select(selectByRole)),
         tap(([_, byRole]) => {
           localStorage.setItem(POOL_STORAGE_KEY, JSON.stringify(byRole));

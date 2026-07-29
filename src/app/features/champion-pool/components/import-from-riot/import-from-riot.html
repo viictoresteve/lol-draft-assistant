@@ -32,6 +32,19 @@
     </button>
   </form>
 
+  @if (history().length) {
+    <div class="ri-history" [attr.aria-label]="ls.T().riotRecent">
+      <span class="ri-history-label">{{ ls.T().riotRecent }}:</span>
+      @for (h of history(); track h.gameName + h.tagLine + h.region) {
+        <span class="ri-chip" (click)="useHistory(h)" [title]="h.gameName + '#' + h.tagLine">
+          {{ h.gameName }}<span class="ri-chip-tag">#{{ h.tagLine }}</span>
+          <span class="ri-chip-region">{{ h.region }}</span>
+          <button type="button" class="ri-chip-x" (click)="removeHistory(h, $event)" aria-label="remove">×</button>
+        </span>
+      }
+    </div>
+  }
+
   @if (error()) {
     <p class="ri-error" role="alert">{{ errorText() }}</p>
   }

@@ -74,6 +74,65 @@
   &:disabled { opacity: 0.5; cursor: default; }
 }
 
+/* ── Search history ── */
+.ri-history {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ri-history-label {
+  font-size: 0.68rem;
+  color: #6a6a6a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ri-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #0d1117;
+  border: 1px solid #2a2f36;
+  border-radius: 12px;
+  padding: 3px 4px 3px 10px;
+  font-size: 0.72rem;
+  color: #f0e6d2;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover { border-color: #785a28; }
+}
+
+.ri-chip-tag {
+  color: #7a7a7a;
+}
+
+.ri-chip-region {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #c89b3c;
+  background: rgba(200, 155, 60, 0.1);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.ri-chip-x {
+  background: transparent;
+  border: none;
+  color: #6a6a6a;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 3px;
+  border-radius: 50%;
+
+  &:hover { color: #e06060; }
+}
+
 /* ── Feedback ── */
 .ri-error {
   margin: 10px 0 0;

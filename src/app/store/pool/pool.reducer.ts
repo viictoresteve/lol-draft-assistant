@@ -32,6 +32,11 @@ export const poolReducer = createReducer(
     },
   })),
 
+  on(PoolActions.clearPool, (state) => ({
+    ...state,
+    byRole: { ...EMPTY_BY_ROLE },
+  })),
+
   on(PoolActions.loadPoolSuccess, (state, { byRole }) => ({
     ...state,
     byRole,

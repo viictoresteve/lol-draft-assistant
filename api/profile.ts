@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const gameName = String(req.query['gameName'] ?? '').trim();
   const tagLine = String(req.query['tagLine'] ?? '').trim().replace(/^#/, '');
   const region = String(req.query['region'] ?? 'euw1').toLowerCase();
-  const count = Math.min(20, Math.max(1, Math.round(Number(req.query['count'] ?? 12)) || 12));
+  const count = Math.min(60, Math.max(1, Math.round(Number(req.query['count'] ?? 40)) || 40));
 
   if (!gameName || !tagLine) { res.status(400).json({ error: 'Missing Riot ID — expected gameName#tagLine' }); return; }
   const cluster = PLATFORM_CLUSTER[region];
@@ -78,13 +78,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const roleGames = new Map<string, number>();
     const champStats = new Map<string, { championId: number; games: number; wins: number }>();
 
-    const details = await Promise.allSettled(
-      matchIds.map((id) =>
-        fetch(`https://${cluster}.api.riotgames.com/lol/match/v5/matches/${id}`, { headers }).then((r) =>
-          r.ok ? (r.json() as Promise<{ info: { participants: MatchParticipant[] } }>) : null,
+    // Fetch match details in small batches so we stay under Riot's rate limit
+    // (a dev key allows ~20 req/s; firing 40+ at once would get throttled).
+    type Detail = { info: { participants: MatchParticipant[] } } | null;
+    const CHUNK = 12;
+    const details: PromiseSettledResult<Detail>[] = [];
+    for (let i = 0; i < matchIds.length; i += CHUNK) {
+      const batch = matchIds.slice(i, i + CHUNK).map((id) =>
+        fetch(`https://${cluster}.api.riotgames.com/lol/match/v5/matches/${id}`, { headers }).then(
+          (r) => (r.ok ? (r.json() as Promise<Detail>) : null),
         ),
-      ),
-    );
+      );
+      details.push(...(await Promise.allSettled(batch)));
+    }
 
     let analyzed = 0;
     for (const d of details) {

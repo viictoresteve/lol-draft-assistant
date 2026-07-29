@@ -13,6 +13,9 @@ export const removeFromPool = createAction(
   props<{ championId: string; role: DraftRole }>(),
 );
 
+/** Wipe every champion from every role. */
+export const clearPool = createAction('[Pool] Clear Pool');
+
 export const loadPool = createAction('[Pool] Load Pool');
 
 export const loadPoolSuccess = createAction(
