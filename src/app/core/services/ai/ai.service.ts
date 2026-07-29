@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { switchMap, map, catchError, shareReplay } from 'rxjs/operators';
-import { AIHttpService } from '@core/services/ai-http.service';
+import { AIHttpService } from '@core/services/ai/ai-http.service';
 import { DraftPick, DraftRole, DraftSide, Suggestion, GameplayTip, GameplayPhase, CompSummary, ChampionTip, ChampionTipType } from '@features/draft/models/draft.interface';
 import { Champion } from '@shared/models/champion.interface';
 import { LanguageService } from '@core/services/language.service';

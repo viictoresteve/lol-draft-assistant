@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { AiService } from '@core/services/ai.service';
+import { AiService } from '@core/services/ai/ai.service';
 import { DraftRole } from '@features/draft/models/draft.interface';
 import {
   DraftPuzzle, PuzzleResult, PuzzleChampion, PuzzleDifficulty, PuzzleAnswer,

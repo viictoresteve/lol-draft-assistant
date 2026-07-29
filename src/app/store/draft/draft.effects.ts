@@ -16,7 +16,7 @@ import {
 } from './draft.selectors';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { selectByRole } from '@store/pool/pool.selectors';
-import { AiService } from '@core/services/ai.service';
+import { AiService } from '@core/services/ai/ai.service';
 import { DraftRole, DraftSide } from '@features/draft/models/draft.interface';
 
 const SESSION_KEY = 'lol-draft-state';

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { SettingsService } from '@core/services/settings.service';
 import { LanguageService } from '@core/services/language.service';
 import { PatchService } from '@core/services/patch.service';
-import { AI_PROVIDERS } from '@core/services/ai-http.service';
+import { AI_PROVIDERS } from '@core/services/ai/ai-http.service';
 
 @Component({
   selector: 'app-settings-page',
