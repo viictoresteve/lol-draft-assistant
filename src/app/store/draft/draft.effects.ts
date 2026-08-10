@@ -4,7 +4,6 @@ import { Store, Action } from '@ngrx/store';
 import { switchMap, map, catchError, withLatestFrom, startWith, debounceTime, tap, filter } from 'rxjs/operators';
 import { of, Observable, EMPTY, from } from 'rxjs';
 import * as DraftActions from './draft.actions';
-import * as PoolActions from '@store/pool/pool.actions';
 import {
   selectAllPicks,
   selectAllyBans,
@@ -42,10 +41,12 @@ export class DraftEffects {
           DraftActions.setUserRole,
           DraftActions.setSide,
           DraftActions.retryAnalysis,
-          PoolActions.addToPool,
-          PoolActions.removeFromPool,
+          // NOTE: pool edits deliberately do NOT re-run the AI — the pool never
+          // changes the ranking (the "in your pool ★" is applied client-side in
+          // the suggestions panel), so re-analysing on pool changes just burns
+          // tokens. The prompt still reads the latest pool on the next pick.
         ),
-        debounceTime(900),  // suggestions: first to fire
+        debounceTime(1200),  // suggestions: first to fire (coalesce rapid picks)
         withLatestFrom(
           this.store.select(selectAllPicks),
           this.store.select(selectAllyBans),

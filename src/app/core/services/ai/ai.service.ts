@@ -69,7 +69,7 @@ export class AiService {
    * burn rate-limited API calls. Short TTL keeps results fresh.
    */
   private promptCache = new Map<string, { obs: Observable<unknown>; expires: number }>();
-  private static readonly CACHE_TTL_MS = 3 * 60 * 1000;
+  private static readonly CACHE_TTL_MS = 10 * 60 * 1000;
 
   /** Run an AI call through the prompt cache (dedup + short-lived reuse). */
   private cached<T>(prompt: string, factory: () => Observable<T>): Observable<T> {
