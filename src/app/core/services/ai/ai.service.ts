@@ -521,7 +521,7 @@ Format: "A-tier · ~51% WR" or "S-tier · 53% WR". Do NOT put tier/WR inside pro
 
     const lines = tierData
       .filter((e) => !takenNames.has(e.name))
-      .slice(0, 25)
+      .slice(0, 15) // top 15 is plenty of meta context; keeps prompt input lean
       .map((e) => {
         const wr = e.winRate != null ? ` · ${(e.winRate * 100).toFixed(1)}% WR` : '';
         const pr = e.pickRate != null ? ` · ${(e.pickRate * 100).toFixed(1)}% PR` : '';
