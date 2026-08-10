@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const gameName = String(req.query['gameName'] ?? '').trim();
   const tagLine = String(req.query['tagLine'] ?? '').trim().replace(/^#/, '');
   const region = String(req.query['region'] ?? 'euw1').toLowerCase();
-  const count = Math.min(60, Math.max(1, Math.round(Number(req.query['count'] ?? 40)) || 40));
+  const count = Math.min(60, Math.max(1, Math.round(Number(req.query['count'] ?? 25)) || 25));
 
   if (!gameName || !tagLine) { res.status(400).json({ error: 'Missing Riot ID — expected gameName#tagLine' }); return; }
   const cluster = PLATFORM_CLUSTER[region];

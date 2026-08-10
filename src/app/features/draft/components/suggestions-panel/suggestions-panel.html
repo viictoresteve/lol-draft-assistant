@@ -30,7 +30,7 @@
         <button
           class="tab-btn"
           [class.active]="panelTab() === 'champion-tips'"
-          (click)="panelTab.set(panelTab() === 'champion-tips' ? 'suggestions' : 'champion-tips')"
+          (click)="toggleChampionTips()"
           title="Champion mechanics & synergies"
         >
           @if (isLoadingChampionTips()) { <span class="tab-spinner"></span> }

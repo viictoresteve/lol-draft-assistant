@@ -229,18 +229,13 @@ export class DraftEffects {
     { dispatch: false },
   );
 
-  // Fires when the user's own champion is set in the draft
+  // Lazy: only fires when the user opens the Tips tab (requestChampionTips),
+  // not automatically on every pick — saves an AI call when tips go unseen.
   analyzeChampionTips$ = createEffect(
     (): Observable<Action> =>
       this.actions$.pipe(
-        ofType(
-          DraftActions.addAllyPick,
-          DraftActions.setUserRole,
-          DraftActions.loadDraftSuccess,
-          DraftActions.restoreDraft,
-          DraftActions.retryAnalysis,
-        ),
-        debounceTime(700),
+        ofType(DraftActions.requestChampionTips),
+        debounceTime(200),
         withLatestFrom(
           this.store.select(selectAllPicks),
           this.store.select(selectUserRole),

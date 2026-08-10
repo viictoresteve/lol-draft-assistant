@@ -75,6 +75,9 @@ export const loadCompSummarySuccess = createAction(
 export const loadCompSummaryFailure = createAction('[Draft] Load Comp Summary Failure');
 
 // Champion tips (niche mechanics for the user's picked champion)
+// Requested lazily when the user opens the Tips tab — saves an AI call per
+// draft when they never look at the tips.
+export const requestChampionTips = createAction('[Draft] Request Champion Tips');
 export const loadChampionTips = createAction('[Draft] Load Champion Tips');
 export const loadChampionTipsSuccess = createAction(
   '[Draft] Load Champion Tips Success',

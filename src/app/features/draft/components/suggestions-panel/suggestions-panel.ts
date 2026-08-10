@@ -89,6 +89,17 @@ export class SuggestionsPanel {
     return this.playerProfile.recordForName(champion.id);
   }
 
+  /**
+   * Toggle the champion-tips tab. Tips are fetched lazily — the AI call only
+   * fires when the tab is opened (not automatically on pick), so tokens aren't
+   * spent when the player never looks at the tips.
+   */
+  toggleChampionTips() {
+    const opening = this.panelTab() !== 'champion-tips';
+    this.panelTab.set(opening ? 'champion-tips' : 'suggestions');
+    if (opening) this.store.dispatch(DraftActions.requestChampionTips());
+  }
+
   private rawSuggestions = toSignal(this.store.select(selectSuggestions), {
     initialValue: [] as Suggestion[],
   });
