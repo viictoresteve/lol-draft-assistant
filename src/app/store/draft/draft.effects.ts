@@ -34,17 +34,16 @@ export class DraftEffects {
         ofType(
           DraftActions.addAllyPick,
           DraftActions.addEnemyPick,
-          DraftActions.addAllyBan,
-          DraftActions.addEnemyBan,
-          DraftActions.removeAllyBan,
-          DraftActions.removeEnemyBan,
+          DraftActions.removeAllyPick,
+          DraftActions.removeEnemyPick,
           DraftActions.setUserRole,
           DraftActions.setSide,
           DraftActions.retryAnalysis,
-          // NOTE: pool edits deliberately do NOT re-run the AI — the pool never
-          // changes the ranking (the "in your pool ★" is applied client-side in
-          // the suggestions panel), so re-analysing on pool changes just burns
-          // tokens. The prompt still reads the latest pool on the next pick.
+          // Token-saving: suggestions only need to react to picks + role/side.
+          // Bans no longer re-run the AI (banned champs are filtered client-side
+          // in the suggestions panel), and pool edits don't either (the "in your
+          // pool ★" is client-side). Bans/pool are still read into the prompt on
+          // the next pick — they just no longer each trigger a fresh 2.2k call.
         ),
         debounceTime(1200),  // suggestions: first to fire (coalesce rapid picks)
         withLatestFrom(
@@ -56,6 +55,13 @@ export class DraftEffects {
           this.store.select(selectSide),
           this.store.select(selectCompSummary),
         ),
+        // Only spend a call while you still need to pick: no role, or your own
+        // slot is already filled → suggestions are moot, so skip the AI entirely.
+        filter(([, allPicks, , , userRole]) => {
+          if (!userRole) return false;
+          const alreadyPicked = allPicks.allyPicks.some((p) => p.role === userRole && p.champion);
+          return !alreadyPicked;
+        }),
         switchMap(([_, allPicks, allyBans, enemyBans, userRole, byRole, side, compSummary]) => {
           const poolChampions = userRole
             ? byRole[userRole].map((c) => c.name)
@@ -136,7 +142,7 @@ export class DraftEffects {
           const total =
             allPicks.allyPicks.filter((p) => p.champion).length +
             allPicks.enemyPicks.filter((p) => p.champion).length;
-          return total >= 5;
+          return total >= 7; // wait until the comp is mostly formed — fewer re-runs
         }),
         switchMap(([_, allPicks]) =>
           this.aiService
