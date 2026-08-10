@@ -40,7 +40,10 @@ export const AI_PROVIDERS: AIProvider[] = [
     id: 'openrouter',
     name: 'OpenRouter',
     url: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'meta-llama/llama-3.3-70b-instruct:free',
+    // NOTE: OpenRouter's ":free" model slugs get renamed/retired often — a 404
+    // here means this one was retired. Pick a current free model from
+    // https://openrouter.ai/models?max_price=0 if it stops working.
+    model: 'deepseek/deepseek-chat-v3-0324:free',
     getKey: (s) => s.openRouterApiKey(),
     freeKeyUrl: 'https://openrouter.ai/keys',
     jsonMode: false, // free models reject response_format inconsistently
@@ -102,7 +105,9 @@ export class AIHttpService {
           }
         }),
         catchError((err) => {
-          const isRetryable = [429, 401, 503, 502, 500].includes(err?.status);
+          // 404/400 = provider's model slug retired or payload rejected → the
+          // next provider may still work, so treat them as fall-through too.
+          const isRetryable = [429, 401, 400, 403, 404, 500, 502, 503].includes(err?.status);
           if (isRetryable && idx < providers.length - 1) {
             console.warn(`[AI] ${provider.name} returned ${err.status} — trying next provider`);
             return this.tryProvider<T>(body, providers, idx + 1);
